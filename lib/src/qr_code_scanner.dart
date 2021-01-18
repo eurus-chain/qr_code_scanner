@@ -20,6 +20,7 @@ class QRView extends StatefulWidget {
   const QRView({
     @required Key key,
     @required this.onQRViewCreated,
+    @required this.pgTitle,
     this.overlay,
     this.overlayMargin = EdgeInsets.zero,
     this.cameraFacing = CameraFacing.back,
@@ -34,7 +35,7 @@ class QRView extends StatefulWidget {
 
   /// Use [overlay] to provide an overlay for the view.
   /// This can be used to create a certain scan area.
-  final ShapeBorder overlay;
+  final QrScannerOverlayShape overlay;
 
   /// Use [overlayMargin] to provide a margin to [overlay]
   final EdgeInsetsGeometry overlayMargin;
@@ -51,12 +52,30 @@ class QRView extends StatefulWidget {
   /// Use [formatsAllowed] to specify which formats needs to be scanned.
   final List<BarcodeFormat> formatsAllowed;
 
+  /// Scanner Page App Bar Title
+  final String pgTitle;
+
   @override
   State<StatefulWidget> createState() => _QRViewState();
 }
 
-class _QRViewState extends State<QRView> {
+class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
   var _channel;
+  AnimationController _aniCon;
+  bool lightOn = false;
+
+  @override
+  void initState() {
+    _aniCon = AnimationController(vsync: this, duration: Duration(seconds: 3))
+      ..repeat();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _aniCon.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,26 +90,39 @@ class _QRViewState extends State<QRView> {
   }
 
   bool onNotification(notification) {
-    Future.microtask(() => {
-          QRViewController.updateDimensions(widget.key, _channel,
-              scanArea: widget.overlay != null
-                  ? (widget.overlay as QrScannerOverlayShape).cutOutSize
-                  : 0.0)
-        });
+    Future.microtask(
+      () => {
+        QRViewController.updateDimensions(
+          widget.key,
+          _channel,
+          scanArea: widget.overlay != null ? (widget.overlay).cutOutSize : 0.0,
+        )
+      },
+    );
     return false;
   }
 
   Widget _getPlatformQrViewWithOverlay() {
     return Stack(
       children: [
+        _loadingScreen(),
         _getPlatformQrView(),
         Container(
           padding: widget.overlayMargin,
           decoration: ShapeDecoration(
             shape: widget.overlay,
           ),
-        )
+        ),
+        _getScanAnimation(),
       ],
+    );
+  }
+
+  Widget _loadingScreen() {
+    return Container(
+      alignment: Alignment(0, 0),
+      color: Colors.black,
+      child: Icon(Icons.qr_code_rounded, color: Colors.white, size: widget.overlay.cutOutSize * 0.7,),
     );
   }
 
@@ -122,11 +154,60 @@ class _QRViewState extends State<QRView> {
     return _platformQrView;
   }
 
+  Widget _getScanAnimation() {
+    return Center(
+      child: Container(
+        width: widget.overlay.cutOutSize,
+        height: widget.overlay.cutOutSize,
+        alignment: Alignment(0, -1),
+        child: AnimatedBuilder(
+          animation: _aniCon.view,
+          builder: (_, __) {
+            var scanAniRatio = 0.25;
+            var scanAniSize = widget.overlay.cutOutSize * scanAniRatio;
+            var yOffset =
+                ((_aniCon.value - scanAniRatio) / (1 - scanAniRatio)) *
+                    widget.overlay.cutOutSize;
+
+            return Transform.translate(
+              offset: Offset(0, _aniCon.value < scanAniRatio ? 0 : yOffset),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      widget.overlay.borderColor.withOpacity(
+                          _aniCon.value >= scanAniRatio
+                              ? 0
+                              : (1 - (_aniCon.value * 4))),
+                      widget.overlay.borderColor
+                    ],
+                  ),
+                ),
+                height: _aniCon.value < scanAniRatio
+                    ? (_aniCon.value * widget.overlay.cutOutSize)
+                    : _aniCon.value > (1 - scanAniRatio) &&
+                            (widget.overlay.cutOutSize - yOffset) < scanAniSize
+                        ? widget.overlay.cutOutSize - yOffset
+                        : scanAniSize,
+                width: widget.overlay.cutOutSize,
+                child: Padding(
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   void _onPlatformViewCreated(int id) {
     // We pass the cutout size so that the scanner respects the scan area.
     var cutOutSize = 0.0;
     if (widget.overlay != null) {
-      cutOutSize = (widget.overlay as QrScannerOverlayShape).cutOutSize;
+      cutOutSize = (widget.overlay).cutOutSize;
     }
 
     _channel = MethodChannel('net.touchcapture.qr.flutterqr/qrview_$id');
