@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
 
-import '../qr_code_scanner.dart';
+import '../app_qrcode_scanner.dart';
 import 'permission/photo_library.dart';
 import 'template/cus_modal.dart';
 

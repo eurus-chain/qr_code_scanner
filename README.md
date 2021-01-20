@@ -25,7 +25,7 @@ android:requestLegacyExternalStorage="true"
 ## Usage
 Call tryOpenScanner with context will prompt a camera modal for QRCode scanning 
 ```dart
-import 'package:app_qrcode_scanner/qr_code_scanner.dart';
+import 'package:app_qrcode_scanner/app_qrcode_scanner.dart';
 
 Widget build(BuildContext context) {
   return Scaffold(
@@ -45,7 +45,7 @@ Widget build(BuildContext context) {
 You may want to check the camera and photo library usage permission before launching the QRCode scanner
 You can customize the soft launch permission modal by create custom class extends [CustomModal]
 ```dart
-import 'package:app_qrcode_scanner/qr_code_scanner.dart';
+import 'package:app_qrcode_scanner/app_qrcode_scanner.dart';
 
 /// Get permission using another plugin: permission_handler
 var camStatus = await Permission.camera.status;
