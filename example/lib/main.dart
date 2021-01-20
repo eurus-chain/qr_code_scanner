@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 void main() => runApp(MaterialApp(home: QRViewExample()));
@@ -23,23 +24,40 @@ class _QRViewExampleState extends State<QRViewExample> {
     return Scaffold(
       body: SafeArea(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              flex: 1,
-              child: FlatButton(
-                onPressed: () async {
-                  var a = await openScanner(context);
-                  setState(() {
-                    result = a;
-                  });
-                },
+            FlatButton(
+              onPressed: () async {
+                await scanQRCode(context);
+              },
+              child: Padding(
+                padding: EdgeInsets.all(20),
                 child: Text('Show QRCode Scanner'),
               ),
             ),
-            Text(result),
+            Text(
+              result,
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future scanQRCode(BuildContext _) async {
+    var camStatus = await Permission.camera.status;
+    var photoStatus = await Permission.photos.status;
+
+    var camPerm = camStatus.isUndetermined ? null : camStatus.isGranted;
+    var photoPerm = photoStatus.isUndetermined ? null : photoStatus.isGranted;
+
+    var response =
+        await tryOpenScanner(_, hvCameraPerm: camPerm, hvPhotoPerm: photoPerm);
+
+    setState(() {
+      result = response ?? '';
+    });
   }
 }

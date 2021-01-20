@@ -1,28 +1,34 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
-import 'package:image_picker/image_picker.dart';
 
-class QRCodeModal extends ModalRoute<String> {
-  @override
-  Duration get transitionDuration => Duration(milliseconds: 200);
+import 'permission/photo_library.dart';
+import 'template/cus_modal.dart';
 
-  @override
-  bool get opaque => false;
+class QRCodeModal extends CustomModal {
+  QRCodeModal({
+    this.hvPhotoPerm,
+    this.photoPermModal,
+    this.pgTitle,
+    this.imgPickerIcon,
+    this.flashOnIcon,
+    this.flashOnText,
+    this.flashOffIcon,
+    this.flashOffText,
+  }) : super();
 
-  @override
-  bool get barrierDismissible => false;
+  final bool hvPhotoPerm;
+  final CustomModal photoPermModal;
 
-  @override
-  Color get barrierColor => Colors.black.withOpacity(0.5);
-
-  @override
-  String get barrierLabel => null;
-
-  @override
-  bool get maintainState => true;
+  final String pgTitle;
+  final IconData imgPickerIcon;
+  final IconData flashOnIcon;
+  final String flashOnText;
+  final IconData flashOffIcon;
+  final String flashOffText;
 
   @override
   Widget buildPage(
@@ -30,32 +36,47 @@ class QRCodeModal extends ModalRoute<String> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
+    print(flashOffText);
     // This makes sure that text and other content follows the material style
     return Material(
       type: MaterialType.transparency,
       // make sure that the overlay content is not cut off
-      child: _QrCodeModalPage(),
-    );
-  }
-
-  @override
-  Widget buildTransitions(
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: Offset(0, 1),
-        end: Offset.zero,
-      ).animate(animation),
-      child: child,
+      child: _QrCodeModalPage(
+        hvPhotoPerm: hvPhotoPerm,
+        photoPermModal: photoPermModal,
+        pgTitle: pgTitle ?? 'Scan',
+        imgPickerIcon: imgPickerIcon ?? Icons.image_outlined,
+        flashOnIcon: flashOnIcon ?? Icons.flash_on,
+        flashOnText: flashOnText ?? 'Lights On',
+        flashOffIcon: flashOffIcon ?? Icons.flash_off,
+        flashOffText: flashOffText ?? 'Lights Off',
+      ),
     );
   }
 }
 
 class _QrCodeModalPage extends StatefulWidget {
+  _QrCodeModalPage({
+    this.hvPhotoPerm,
+    this.photoPermModal,
+    this.pgTitle = 'Scan',
+    this.imgPickerIcon,
+    this.flashOnIcon,
+    this.flashOnText,
+    this.flashOffIcon,
+    this.flashOffText,
+  }) : super();
+
+  final bool hvPhotoPerm;
+  final CustomModal photoPermModal;
+
+  final String pgTitle;
+  final IconData imgPickerIcon;
+  final IconData flashOnIcon;
+  final String flashOnText;
+  final IconData flashOffIcon;
+  final String flashOffText;
+
   @override
   _QrCodeModalPageState createState() => _QrCodeModalPageState();
 }
@@ -67,7 +88,15 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   bool _flashOn = false;
   String _result = '';
 
+  bool _photoPerm;
+
   BuildContext _context;
+
+  @override
+  void initState() {
+    _photoPerm = widget.hvPhotoPerm == true ? true : null;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +112,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
         QRView(
           key: qrKey,
           onQRViewCreated: _onQRViewCreated,
-          pgTitle: 'Scan',
+          pgTitle: widget.pgTitle,
           overlay: QrScannerOverlayShape(
             borderColor: Color.fromRGBO(0, 179, 243, 1),
             borderRadius: 0,
@@ -108,12 +137,17 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                         Navigator.of(context).pop('empty');
                       },
                     ),
-                    title: Text('Scan'),
+                    title: Text(widget.pgTitle),
                     actions: [
                       IconButton(
-                        icon: Icon(Icons.image_outlined),
+                        icon: Icon(widget.imgPickerIcon),
                         color: Colors.white,
-                        onPressed: _getImage,
+                        onPressed: () async {
+                          await _controller?.pauseCamera();
+                          await _tryOpenImagePicker(context)
+                              .whenComplete(() => _controller?.resumeCamera());
+                          await _tryOpenImagePicker(context);
+                        },
                       )
                     ],
                   ),
@@ -127,7 +161,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                 child: Center(
                   child: FlatButton(
                     onPressed: () {
-                      _controller.toggleFlash();
+                      _controller?.toggleFlash();
                       setState(() {
                         _flashOn = !_flashOn;
                       });
@@ -137,11 +171,19 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(_flashOn ? Icons.flash_off : Icons.flash_on,
-                              color: Colors.white, size: scanArea / 8),
-                          Padding(padding: EdgeInsets.only(bottom: 10)),
-                          Text('Lights ${_flashOn ? 'Off' : 'On'}',
-                              style: TextStyle(color: Colors.white)),
+                          Icon(
+                              _flashOn
+                                  ? widget.flashOffIcon
+                                  : widget.flashOnIcon,
+                              color: Colors.white,
+                              size: scanArea / 8),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 10),
+                          ),
+                          Text(
+                            _flashOn ? widget.flashOffText : widget.flashOnText,
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ],
                       ),
                     ),
@@ -172,21 +214,45 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
 
   void _onScannedData(String val) {
     _result = val;
-    _controller..pauseCamera()..dispose();
-    _controller = null;
+    if (_controller != null) {
+      _controller
+        ..pauseCamera()
+        ..dispose();
+      _controller = null;
+    }
     Future.delayed(
       Duration(milliseconds: 0),
       () => Navigator.of(_context).pop(_result),
     );
   }
 
-  Future _getImage() async {
-    await _controller.pauseCamera();
-    final pickedFile = await ImagePicker().getImage(
+  Future _tryOpenImagePicker(BuildContext _) async {
+    if (widget.hvPhotoPerm == true || _photoPerm == true) {
+      await _openImagePicker(_);
+    } else if (widget.hvPhotoPerm == false || _photoPerm == false) {
+      await Navigator.of(_).push(PhotoLibraryPermModal(disabled: true));
+      return;
+    } else {
+      var photoPrem = await Navigator.of(_)
+          .push(widget.photoPermModal ?? PhotoLibraryPermModal());
+      if (photoPrem != true) {
+        return;
+      }
+      await _openImagePicker(_);
+    }
+  }
+
+  Future _openImagePicker(BuildContext _) async {
+    await ImagePicker()
+        .getImage(
       source: ImageSource.gallery,
-    );
-    await _controller.resumeCamera();
-    if (pickedFile != null) await _decode(pickedFile.path);
+    )
+        .then((pickedFile) async {
+      if (pickedFile != null) await _decode(pickedFile.path);
+      setState(() {
+        _photoPerm = true;
+      });
+    });
   }
 
   Future _decode(String file) async {

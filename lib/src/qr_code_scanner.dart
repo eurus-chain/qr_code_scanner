@@ -122,7 +122,11 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
     return Container(
       alignment: Alignment(0, 0),
       color: Colors.black,
-      child: Icon(Icons.qr_code_rounded, color: Colors.white, size: widget.overlay.cutOutSize * 0.7,),
+      child: Icon(
+        Icons.qr_code_rounded,
+        color: Colors.white,
+        size: widget.overlay.cutOutSize * 0.7,
+      ),
     );
   }
 
