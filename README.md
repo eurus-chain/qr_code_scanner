@@ -1,167 +1,78 @@
-# QR Code Scanner
-[![GH Actions](https://github.com/juliuscanute/qr_code_scanner/workflows/dart/badge.svg)](https://github.com/juliuscanute/qr_code_scanner/actions)
+# app_qrcode_scanner
 
-A QR code scanner that works on both iOS and Android by natively embedding the platform view within Flutter. The integration with Flutter is seamless, much better than jumping into a native Activity or a ViewController to perform the scan.
+app_qrcode_scanner is a plugin for application to scan QRCode using camera or images from their device photo library. 
 
-# *Warning*
-If you are using Flutter Beta or Dev channel (1.25 or 1.26) you can get the following error:
+This plugin is forked from [qr_code_scanner](https://github.com/juliuscanute/qr_code_scanner)
 
-`java.lang.AbstractMethodError: abstract method "void io.flutter.plugin.platform.PlatformView.onFlutterViewAttached(android.view.View)"`
-
-This is a bug in Flutter which is being tracked here: https://github.com/flutter/flutter/issues/72185
-
-There is a workaround by adding `android.enableDexingArtifactTransform=false` to your `gradle.properties` file.
-
-## Screenshots
-<table>
-<tr>
-<th colspan="2">
-Android
-</th>
-</tr>
-
-<tr>
-<td>
-<p align="center">
-<img src="https://raw.githubusercontent.com/juliuscanute/qr_code_scanner/master/.resources/android-app-screen-one.jpg" width="30%" height="30%">
-</p>
-</td>
-<td>
-<p align="center">
-<img src="https://raw.githubusercontent.com/juliuscanute/qr_code_scanner/master/.resources/android-app-screen-two.jpg" width="30%" height="30%">
-</p>
-</td>
-</tr>
-
-<tr>
-<th colspan="2">
-iOS
-</th>
-</tr>
-
-<tr>
-<td>
-<p align="center">
-<img src="https://raw.githubusercontent.com/juliuscanute/qr_code_scanner/master/.resources/ios-app-screen-one.png" width="30%" height="30%">
-</p>
-</td>
-<td>
-<p align="center">
-<img src="https://raw.githubusercontent.com/juliuscanute/qr_code_scanner/master/.resources/ios-app-screen-two.png" width="30%" height="30%">
-</p>
-</td>
-</tr>
-
-</table>
-
-## Get Scanned QR Code
-
-When a QR code is recognized, the text identified will be set in 'result' of type `Barcode`, which contains the output text as property 'code' of type `String` and scanned code type as property 'format' which is an enum `BarcodeFormat`, defined in the library.
-
-```dart
-class _QRViewExampleState extends State<QRViewExample> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  Barcode result;
-  QRViewController controller;
-
-  // In order to get hot reload to work we need to pause the camera if the platform
-  // is android, or resume the camera if the platform is iOS.
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (Platform.isAndroid) {
-      controller.pauseCamera();
-    } else if (Platform.isIOS) {
-      controller.resumeCamera();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 5,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: (result != null)
-                  ? Text(
-                      'Barcode Type: ${describeEnum(result.format)}   Data: ${result.code}')
-                  : Text('Scan a code'),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        result = scanData;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
-}
-
-```
-
-## iOS Integration
-In order to use this plugin, add the following to your Info.plist file:
-```
+## Installation
+### iOS
+Camera and Photo library usage description area required.
+Add the following lines into your Info.plist file to do so.
+```plist
 <key>io.flutter.embedded_views_preview</key>
 <true/>
 <key>NSCameraUsageDescription</key>
 <string>This app needs camera access to scan QR codes</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>This app needs photo library access to scan QR codes from image</string>
 ```
-
-## Flip Camera (Back/Front)
-The default camera is the back camera.
+### Android
+For API 29+
+Add the following lines into AndroidManifest.xml, which is required in Android Q since this attribute default value is false
+```xml
+android:requestLegacyExternalStorage="true"
+```
+## Usage
+Call tryOpenScanner with context will prompt a camera modal for QRCode scanning 
 ```dart
-await controller.flipCamera();
+import 'package:app_qrcode_scanner/qr_code_scanner.dart';
+
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Column(
+      children: [
+        onPressed: () async {
+          /// await QRCode content as [String]
+          String result = await tryOpenScanner(context);
+        }
+      ]
+    )
+  );
+}
 ```
 
-## Flash (Off/On)
-By default, flash is OFF.
+### Permission
+You may want to check the camera and photo library usage permission before launching the QRCode scanner
+You can customize the soft launch permission modal by create custom class extends [CustomModal]
 ```dart
-await controller.toggleFlash();
+import 'package:app_qrcode_scanner/qr_code_scanner.dart';
+
+/// Get permission using another plugin: permission_handler
+var camStatus = await Permission.camera.status;
+var photoStatus = await Permission.photos.status;
+
+var camPerm = camStatus.isUndetermined ? null : camStatus.isGranted;
+var photoPerm = photoStatus.isUndetermined ? null : photoStatus.isGranted;
+
+/// await QRCode content as [String]
+String result = await tryOpenScanner(
+  context, 
+  hvCameraPerm: camPerm, 
+  cameraPermModal: CameraPermissionModal(), 
+  hvPhotoPerm: photoPerm,
+);
+
+class CameraPermissionModal extends CustomModal {
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return Material(
+      type: MaterialType.transparency,
+      child: Container() // Your own design
+    )
+  }
+}
 ```
-
-## Resume/Pause
-Pause camera stream and scanner.
-```dart
-await controller.pauseCamera();
-```
-Resume camera stream and scanner.
-```dart
-await controller.resumeCamera();
-```
-
-
-# SDK
-Requires at least SDK 21 (Android 5.0).
-Requires at least iOS 8.
-
-# TODOs
-* iOS Native embedding is written to match what is supported in the framework as of the date of publication of this package. It needs to be improved as the framework support improves.
-* In future, options will be provided for default states.
-* Finally, I welcome PR's to make it better :), thanks
-
-# Credits
-* Android: https://github.com/zxing/zxing
-* iOS: https://github.com/mikebuss/MTBBarcodeScanner
-* Special Thanks To: LeonDevLifeLog for his contributions towards improving this package.

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:qr_code_scanner/src/template/cus_modal.dart';
-import 'package:qr_code_scanner/src/permission/camera.dart';
-import 'package:qr_code_scanner/src/qr_code_modal.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
 
+import 'src/permission/camera.dart';
 import 'src/permission/photo_library.dart';
+import 'src/qr_code_modal.dart';
+import 'src/template/cus_modal.dart';
 
 export 'src/qr_code_modal.dart';
 export 'src/qr_code_scanner.dart';
@@ -132,7 +132,6 @@ Widget _imgPickerbtn(
       FlatButton(
         onPressed: () async {
           var result = await _tryOpenImgPicker(_, hvPhotoPerm, photoPermModal);
-          print('cus btn $result');
           Navigator.of(_).pop(result);
         },
         child: Text('Scan QRCode from Image'),

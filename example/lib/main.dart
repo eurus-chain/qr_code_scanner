@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:app_qrcode_scanner/qr_code_scanner.dart';
 
 void main() => runApp(MaterialApp(home: QRViewExample()));
 

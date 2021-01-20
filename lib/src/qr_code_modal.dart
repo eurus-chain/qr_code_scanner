@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
 
+import '../qr_code_scanner.dart';
 import 'permission/photo_library.dart';
 import 'template/cus_modal.dart';
 
@@ -36,7 +36,6 @@ class QRCodeModal extends CustomModal {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
-    print(flashOffText);
     // This makes sure that text and other content follows the material style
     return Material(
       type: MaterialType.transparency,
