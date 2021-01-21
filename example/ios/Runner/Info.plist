@@ -25,7 +25,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Can we access your camera in order to scan barcodes?</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Please &gt;.&lt;</string>
+	<string>Can i please use this</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
