@@ -16,6 +16,90 @@ export 'src/types/camera.dart';
 export 'src/types/camera_exception.dart';
 export 'src/types/features.dart';
 
+abstract class AppQRCodeScanner {
+  Future<String> tryOpenScanner(
+    BuildContext _, {
+    String camtPgTitle,
+    IconData imgPickerIcon,
+    IconData flashOnIcon,
+    String flashOnText,
+    IconData flashOffIcon,
+    String flashOffText,
+    CustomModal cameraPermModal,
+    CustomModal photoPermModal,
+  }) async {
+    var hvCamPerm = await ckCameraPermission();
+    var hvPhotoPerm = await ckPhotoPermission();
+
+    if (hvCamPerm == false) {
+      // No permission and has to be done in system setting
+      var result = Navigator.of(_).push(
+        cameraPermModal ??
+            CameraPermModal(
+              disabled: true,
+              openPhotoAction: hvPhotoPerm != false
+                  ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
+                  : null,
+            ),
+      );
+      return result is String ? result : '';
+    } else if (hvCamPerm == true) {
+      // Already hv permission
+      return _openScanner(
+        _,
+        hvPhotoPerm: hvPhotoPerm,
+        photoPermModal: photoPermModal,
+        pgTitle: camtPgTitle,
+        imgPickerIcon: imgPickerIcon,
+        flashOnIcon: flashOnIcon,
+        flashOnText: flashOnText,
+        flashOffIcon: flashOffIcon,
+        flashOffText: flashOffText,
+      );
+    } else {
+      // Ask permission
+      var result = await Navigator.of(_).push(
+        cameraPermModal ??
+            CameraPermModal(
+              openPhotoAction: hvPhotoPerm != false
+                  ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
+                  : null,
+            ),
+      );
+      // Open Camera modal to scan QRCode
+      if (result == true) {
+        return _openScanner(
+          _,
+          hvPhotoPerm: hvPhotoPerm,
+          photoPermModal: photoPermModal,
+          pgTitle: camtPgTitle,
+          imgPickerIcon: imgPickerIcon,
+          flashOnIcon: flashOnIcon,
+          flashOnText: flashOnText,
+          flashOffIcon: flashOffIcon,
+          flashOffText: flashOffText,
+        );
+      }
+      // Return result from Image QRCode
+      if (result is String) {
+        return result;
+      }
+    }
+
+    return '';
+  }
+
+  /// Return permission status of resourses
+  ///
+  /// null:   Have to ask for permission
+  /// true:   Already granted permission
+  /// false:  Permission denied
+  Future<bool> ckCameraPermission();
+  Future<bool> ckPhotoPermission();
+}
+
+@Deprecated(
+    'Should not use directly now\n Should extend AppQRCodeScanner function with permission function implemented')
 Future<String> tryOpenScanner(
   BuildContext _, {
   bool hvCameraPerm,

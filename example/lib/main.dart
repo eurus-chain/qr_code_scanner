@@ -47,17 +47,28 @@ class _QRViewExampleState extends State<QRViewExample> {
   }
 
   Future scanQRCode(BuildContext _) async {
-    var camStatus = await Permission.camera.status;
-    var photoStatus = await Permission.photos.status;
-
-    var camPerm = camStatus.isUndetermined ? null : camStatus.isGranted;
-    var photoPerm = photoStatus.isUndetermined ? null : photoStatus.isGranted;
-
-    var response =
-        await tryOpenScanner(_, hvCameraPerm: camPerm, hvPhotoPerm: photoPerm);
+    var response = await QRCodeScanner().tryOpenScanner(_);
 
     setState(() {
       result = response ?? '';
     });
+  }
+}
+
+class QRCodeScanner extends AppQRCodeScanner {
+  @override
+  Future<bool> ckCameraPermission() async {
+    var camStatus = await Permission.camera.status;
+    var camPerm = camStatus.isUndetermined ? null : camStatus.isGranted;
+
+    return camPerm;
+  }
+
+  @override
+  Future<bool> ckPhotoPermission() async {
+    var photoStatus = await Permission.photos.status;
+    var photoPerm = photoStatus.isUndetermined ? null : photoStatus.isGranted;
+
+    return photoPerm;
   }
 }
