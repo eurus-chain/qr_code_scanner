@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'lifecycle_event_handler.dart';
 import 'qr_scanner_overlay_shape.dart';
 import 'types/barcode.dart';
 import 'types/barcode_format.dart';
@@ -61,20 +63,25 @@ class QRView extends StatefulWidget {
 
 class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
   var _channel;
+  var _observer;
+
   AnimationController _aniCon;
   bool lightOn = false;
 
   @override
   void initState() {
+    super.initState();
     _aniCon = AnimationController(vsync: this, duration: Duration(seconds: 3))
       ..repeat();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _aniCon.dispose();
-    super.dispose();
+    _observer = LifecycleEventHandler(
+        resumeCallBack: () async => {
+              if (_channel != null)
+                {
+                  QRViewController.updateDimensions(widget.key, _channel,
+                      overlay: widget.overlay)
+                }
+            });
+    WidgetsBinding.instance.addObserver(_observer);
   }
 
   @override
@@ -89,16 +96,18 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
     );
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(_observer);
+  }
+
   bool onNotification(notification) {
-    Future.microtask(
-      () => {
-        QRViewController.updateDimensions(
-          widget.key,
-          _channel,
-          scanArea: widget.overlay != null ? (widget.overlay).cutOutSize : 0.0,
-        )
-      },
-    );
+    Future.microtask(() => {
+          QRViewController.updateDimensions(widget.key, _channel,
+              overlay: widget.overlay)
+        });
+
     return false;
   }
 
@@ -218,8 +227,8 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
 
     // Start scan after creation of the view
     final controller = QRViewController._(
-        _channel, widget.key, cutOutSize, widget.onPermissionSet)
-      .._startScan(widget.key, cutOutSize, widget.formatsAllowed);
+        _channel, widget.key, widget.onPermissionSet, widget.cameraFacing)
+      .._startScan(widget.key, widget.overlay, widget.formatsAllowed);
 
     // Initialize the controller for controlling the QRView
     if (widget.onQRViewCreated != null) {
@@ -243,9 +252,10 @@ class _QrCameraSettings {
 }
 
 class QRViewController {
-  QRViewController._(MethodChannel channel, GlobalKey qrKey, double scanArea,
-      PermissionSetCallback onPermissionSet)
-      : _channel = channel {
+  QRViewController._(MethodChannel channel, GlobalKey qrKey,
+      PermissionSetCallback onPermissionSet, CameraFacing cameraFacing)
+      : _channel = channel,
+        _cameraFacing = cameraFacing {
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onRecognizeQR':
@@ -282,6 +292,7 @@ class QRViewController {
   }
 
   final MethodChannel _channel;
+  final CameraFacing _cameraFacing;
   final StreamController<Barcode> _scanUpdateController =
       StreamController<Barcode>();
 
@@ -294,17 +305,23 @@ class QRViewController {
   bool get hasPermissions => _hasPermissions;
 
   /// Starts the barcode scanner
-  Future<void> _startScan(GlobalKey key, double cutOutSize,
+  Future<void> _startScan(GlobalKey key, QrScannerOverlayShape overlay,
       List<BarcodeFormat> barcodeFormats) async {
     // We need to update the dimension before the scan is started.
-    QRViewController.updateDimensions(key, _channel, scanArea: cutOutSize);
-    return _channel.invokeMethod(
-        'startScan', barcodeFormats?.map((e) => e.asInt())?.toList() ?? []);
+    try {
+      await QRViewController.updateDimensions(key, _channel, overlay: overlay);
+      return await _channel.invokeMethod(
+          'startScan', barcodeFormats?.map((e) => e.asInt())?.toList() ?? []);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
   }
 
   /// Gets information about which camera is active.
   Future<CameraFacing> getCameraInfo() async {
     try {
+      var cameraFacing = await _channel.invokeMethod('getCameraInfo') as int;
+      if (cameraFacing == -1) return _cameraFacing;
       return CameraFacing
           .values[await _channel.invokeMethod('getCameraInfo') as int];
     } on PlatformException catch (e) {
@@ -340,10 +357,19 @@ class QRViewController {
     }
   }
 
-  /// Pauses barcode scanning
+  /// Pauses the camera and barcode scanning
   Future<void> pauseCamera() async {
     try {
       await _channel.invokeMethod('pauseCamera');
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Stops barcode scanning and the camera
+  Future<void> stopCamera() async {
+    try {
+      await _channel.invokeMethod('stopCamera');
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -369,21 +395,29 @@ class QRViewController {
     }
   }
 
-  /// Disposes the barcode stream.
+  /// Stops the camera and disposes the barcode stream.
   void dispose() {
+    if (Platform.isIOS) stopCamera();
     _scanUpdateController.close();
   }
 
   /// Updates the view dimensions for iOS.
-  static void updateDimensions(GlobalKey key, MethodChannel channel,
-      {double scanArea}) {
+  static Future<void> updateDimensions(GlobalKey key, MethodChannel channel,
+      {QrScannerOverlayShape overlay}) async {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // Add small delay to ensure the renderbox is loaded
+      await Future.delayed(Duration(milliseconds: 100));
       final RenderBox renderBox = key.currentContext.findRenderObject();
-      channel.invokeMethod('setDimensions', {
-        'width': renderBox.size.width,
-        'height': renderBox.size.height,
-        'scanArea': scanArea ?? 0
-      });
+      try {
+        await channel.invokeMethod('setDimensions', {
+          'width': renderBox.size.width,
+          'height': renderBox.size.height,
+          'scanArea': overlay?.cutOutSize ?? 0,
+          'scanAreaOffset': overlay?.cutOutBottomOffset ?? 0
+        });
+      } on PlatformException catch (e) {
+        throw CameraException(e.code, e.message);
+      }
     }
   }
 }

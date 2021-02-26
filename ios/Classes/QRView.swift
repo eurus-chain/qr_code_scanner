@@ -15,8 +15,11 @@ public class QRView:NSObject,FlutterPlatformView {
     var channel: FlutterMethodChannel
     var cameraFacing: MTBCamera
     
+    // Codabar, maxicode, rss14 & rssexpanded not supported. Replaced with qr.
+    // UPCa uses ean13 object.
     var QRCodeTypes = [
           0: AVMetadataObject.ObjectType.aztec,
+          1: AVMetadataObject.ObjectType.qr,
           2: AVMetadataObject.ObjectType.code39,
           3: AVMetadataObject.ObjectType.code93,
           4: AVMetadataObject.ObjectType.code128,
@@ -24,8 +27,12 @@ public class QRView:NSObject,FlutterPlatformView {
           6: AVMetadataObject.ObjectType.ean8,
           7: AVMetadataObject.ObjectType.ean13,
           8: AVMetadataObject.ObjectType.interleaved2of5,
+          9: AVMetadataObject.ObjectType.qr,
           10: AVMetadataObject.ObjectType.pdf417,
           11: AVMetadataObject.ObjectType.qr,
+          12: AVMetadataObject.ObjectType.qr,
+          13: AVMetadataObject.ObjectType.qr,
+          14: AVMetadataObject.ObjectType.ean13,
           15: AVMetadataObject.ObjectType.upce
          ]
     
@@ -46,7 +53,11 @@ public class QRView:NSObject,FlutterPlatformView {
             switch(call.method){
                 case "setDimensions":
                     let arguments = call.arguments as! Dictionary<String, Double>
-                    self?.setDimensions(width: arguments["width"] ?? 0, height: arguments["height"] ?? 0, scanArea: arguments["scanArea"] ?? 0)
+                    self?.setDimensions(result,
+                                        width: arguments["width"] ?? 0,
+                                        height: arguments["height"] ?? 0,
+                                        scanArea: arguments["scanArea"] ?? 0,
+                                        scanAreaOffset: arguments["scanAreaOffset"] ?? 0)
                 case "startScan":
                     self?.startScan(call.arguments as! Array<Int>, result)
                 case "flipCamera":
@@ -55,6 +66,8 @@ public class QRView:NSObject,FlutterPlatformView {
                     self?.toggleFlash(result)
                 case "pauseCamera":
                     self?.pauseCamera(result)
+                case "stopCamera":
+                    self?.stopCamera(result)
                 case "resumeCamera":
                     self?.resumeCamera(result)
                 case "getCameraInfo":
@@ -71,45 +84,47 @@ public class QRView:NSObject,FlutterPlatformView {
         return previewView
     }
     
-    func setDimensions(width: Double, height: Double, scanArea: Double) -> Void {
-        // First set the size of the preview area.
+    func setDimensions(_ result: @escaping FlutterResult, width: Double, height: Double, scanArea: Double, scanAreaOffset: Double) {
+        // Then set the size of the preview area.
         previewView.frame = CGRect(x: 0, y: 0, width: width, height: height)
         
         // Then set the size of the scan area.
         let midX = self.view().bounds.midX
         let midY = self.view().bounds.midY
         
-        // Check if the scanner is already created.
         if let sc: MTBBarcodeScanner = scanner {
+            // Set the size of the preview if preview is already created.
             if let previewLayer = sc.previewLayer {
-                previewLayer.frame = previewView.bounds;
-            }
-            if (scanArea != 0) {
-                sc.scanRect = CGRect(x: Double(midX) - (scanArea / 2), y: Double(midY) - (scanArea / 2), width: scanArea, height: scanArea)
+                previewLayer.frame = self.previewView.bounds
             }
         } else {
-            // Create a scanner view if it doesn't exist yet.
+            // Create new preview.
             scanner = MTBBarcodeScanner(previewView: previewView)
-            
-            if (scanArea != 0) {
-                scanner?.didStartScanningBlock = {
-                    self.scanner?.scanRect = CGRect(x: Double(midX) - (scanArea / 2), y: Double(midY) - (scanArea / 2), width: scanArea, height: scanArea)
+        }
+
+        // Set scanArea if provided.
+        if (scanArea != 0) {
+            scanner?.didStartScanningBlock = {
+                self.scanner?.scanRect = CGRect(x: Double(midX) - (scanArea / 2), y: Double(midY) - (scanArea / 2), width: scanArea, height: scanArea)
+
+                // Set offset if provided.
+                if (scanAreaOffset != 0) {
+                    let reversedOffset = -scanAreaOffset
+                    self.scanner?.scanRect = (self.scanner?.scanRect.offsetBy(dx: 0, dy: CGFloat(reversedOffset)))!
+
                 }
             }
         }
+        return result(width)
+        
     }
     
-    func startScan(_ arguments: Array<Int>, _ result: @escaping FlutterResult) -> Void {
-        if (scanner == nil) {
-            scanner = MTBBarcodeScanner(previewView: previewView)
-        }
-        
-        
+    func startScan(_ arguments: Array<Int>, _ result: @escaping FlutterResult) {
+        // Check for allowed barcodes
         var allowedBarcodeTypes: Array<AVMetadataObject.ObjectType> = []
         arguments.forEach { arg in
             allowedBarcodeTypes.append( QRCodeTypes[arg]!)
         }
-
         MTBBarcodeScanner.requestCameraPermission(success: { permissionGranted in
             if permissionGranted {
                 do {
@@ -151,10 +166,11 @@ public class QRView:NSObject,FlutterPlatformView {
                                 
                             }
                         }
+
                     })
                 } catch {
                     let error = FlutterError(code: "unknown-error", message: "Unable to start scanning", details: nil)
-                    result(error)
+                    return result(error)
                 }
             } else {
                 let error = FlutterError(code: "cameraPermission", message: "Permission denied to access the camera", details: nil)
@@ -163,35 +179,31 @@ public class QRView:NSObject,FlutterPlatformView {
         })
     }
     
-    func stopScan(){
-        if let sc: MTBBarcodeScanner = scanner {
+    func stopCamera(_ result: @escaping FlutterResult) {
+        if let sc: MTBBarcodeScanner = self.scanner {
             if sc.isScanning() {
                 sc.stopScanning()
             }
         }
     }
     
-    func getCameraInfo(_ result: @escaping FlutterResult) -> Void {
-        if let sc: MTBBarcodeScanner = scanner {
-            result(sc.camera.rawValue)
-        } else {
-            let error = FlutterError(code: "cameraInformationError", message: "Could not get camera information", details: nil)
-            result(error)
-        }
+    func getCameraInfo(_ result: @escaping FlutterResult) {
+        result(self.cameraFacing.rawValue)
     }
     
-    func flipCamera(_ result: @escaping FlutterResult){
-        if let sc: MTBBarcodeScanner = scanner {
+    func flipCamera(_ result: @escaping FlutterResult) {
+        if let sc: MTBBarcodeScanner = self.scanner {
             if sc.hasOppositeCamera() {
                 sc.flipCamera()
+                self.cameraFacing = sc.camera
             }
             return result(sc.camera.rawValue)
         }
         return result(FlutterError(code: "404", message: "No barcode scanner found", details: nil))
     }
     
-    func getFlashInfo(_ result: @escaping FlutterResult) -> Void {
-        if let sc: MTBBarcodeScanner = scanner {
+    func getFlashInfo(_ result: @escaping FlutterResult) {
+        if let sc: MTBBarcodeScanner = self.scanner {
             result(sc.torchMode.rawValue != 0)
         } else {
             let error = FlutterError(code: "cameraInformationError", message: "Could not get flash information", details: nil)
@@ -200,7 +212,7 @@ public class QRView:NSObject,FlutterPlatformView {
     }
     
     func toggleFlash(_ result: @escaping FlutterResult){
-        if let sc: MTBBarcodeScanner = scanner {
+        if let sc: MTBBarcodeScanner = self.scanner {
             if sc.hasTorch() {
                 sc.toggleTorch()
                 return result(sc.torchMode == MTBTorchMode(rawValue: 1))
@@ -211,7 +223,7 @@ public class QRView:NSObject,FlutterPlatformView {
     }
     
     func pauseCamera(_ result: @escaping FlutterResult) {
-        if let sc: MTBBarcodeScanner = scanner {
+        if let sc: MTBBarcodeScanner = self.scanner {
             if sc.isScanning() {
                 sc.freezeCapture()
             }
@@ -221,7 +233,7 @@ public class QRView:NSObject,FlutterPlatformView {
     }
     
     func resumeCamera(_ result: @escaping FlutterResult) {
-        if let sc: MTBBarcodeScanner = scanner {
+        if let sc: MTBBarcodeScanner = self.scanner {
             if !sc.isScanning() {
                 sc.unfreezeCapture()
             }
@@ -230,7 +242,7 @@ public class QRView:NSObject,FlutterPlatformView {
         return result(FlutterError(code: "404", message: "No barcode scanner found", details: nil))
     }
 
-    func getSystemFeatures(_ result: @escaping FlutterResult) -> Void {
+    func getSystemFeatures(_ result: @escaping FlutterResult) {
         if let sc: MTBBarcodeScanner = scanner {
             var hasBackCameraVar = false
             var hasFrontCameraVar = false
