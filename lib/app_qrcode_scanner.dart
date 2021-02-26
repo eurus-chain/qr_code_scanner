@@ -17,17 +17,17 @@ export 'src/types/camera_exception.dart';
 export 'src/types/features.dart';
 
 abstract class AppQRCodeScanner {
-  Future<String> tryOpenScanner(
-    BuildContext _, {
-    String camtPgTitle,
-    IconData imgPickerIcon,
-    IconData flashOnIcon,
-    String flashOnText,
-    IconData flashOffIcon,
-    String flashOffText,
-    CustomModal cameraPermModal,
-    CustomModal photoPermModal,
-  }) async {
+  Color themeColor;
+  String camtPgTitle;
+  IconData imgPickerIcon;
+  IconData flashOnIcon;
+  String flashOnText;
+  IconData flashOffIcon;
+  String flashOffText;
+  CustomModal cameraPermModal;
+  CustomModal photoPermModal;
+
+  Future<String> tryOpenScanner(BuildContext _) async {
     var hvCamPerm = await ckCameraPermission();
     var hvPhotoPerm = await ckPhotoPermission();
 
@@ -38,8 +38,14 @@ abstract class AppQRCodeScanner {
             CameraPermModal(
               disabled: true,
               openPhotoAction: hvPhotoPerm != false
-                  ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
+                  ? _imgPickerbtn(
+                      _,
+                      hvPhotoPerm,
+                      photoPermModal,
+                      themeColor: themeColor,
+                    )
                   : null,
+              themeColor: themeColor,
             ),
       );
       return result is String ? result : '';
@@ -62,8 +68,14 @@ abstract class AppQRCodeScanner {
         cameraPermModal ??
             CameraPermModal(
               openPhotoAction: hvPhotoPerm != false
-                  ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
+                  ? _imgPickerbtn(
+                      _,
+                      hvPhotoPerm,
+                      photoPermModal,
+                      themeColor: themeColor,
+                    )
                   : null,
+              themeColor: themeColor,
             ),
       );
       // Open Camera modal to scan QRCode
@@ -98,78 +110,78 @@ abstract class AppQRCodeScanner {
   Future<bool> ckPhotoPermission();
 }
 
-@Deprecated(
-    'Should not use directly now\n Should extend AppQRCodeScanner function with permission function implemented')
-Future<String> tryOpenScanner(
-  BuildContext _, {
-  bool hvCameraPerm,
-  bool hvPhotoPerm,
-  CustomModal cameraPermModal,
-  CustomModal photoPermModal,
-  String camtPgTitle,
-  IconData imgPickerIcon,
-  IconData flashOnIcon,
-  String flashOnText,
-  IconData flashOffIcon,
-  String flashOffText,
-}) async {
-  if (hvCameraPerm == false) {
-    // No permission and has to be done in system setting
-    var result = Navigator.of(_).push(
-      cameraPermModal ??
-          CameraPermModal(
-            disabled: true,
-            openPhotoAction: hvPhotoPerm != false
-                ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
-                : null,
-          ),
-    );
-    return result is String ? result : '';
-  } else if (hvCameraPerm == true) {
-    // Already hv permission
-    return _openScanner(
-      _,
-      hvPhotoPerm: hvPhotoPerm,
-      photoPermModal: photoPermModal,
-      pgTitle: camtPgTitle,
-      imgPickerIcon: imgPickerIcon,
-      flashOnIcon: flashOnIcon,
-      flashOnText: flashOnText,
-      flashOffIcon: flashOffIcon,
-      flashOffText: flashOffText,
-    );
-  } else {
-    // Ask permission
-    var result = await Navigator.of(_).push(
-      cameraPermModal ??
-          CameraPermModal(
-            openPhotoAction: hvPhotoPerm != false
-                ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
-                : null,
-          ),
-    );
-    // Open Camera modal to scan QRCode
-    if (result == true) {
-      return _openScanner(
-        _,
-        hvPhotoPerm: hvPhotoPerm,
-        photoPermModal: photoPermModal,
-        pgTitle: camtPgTitle,
-        imgPickerIcon: imgPickerIcon,
-        flashOnIcon: flashOnIcon,
-        flashOnText: flashOnText,
-        flashOffIcon: flashOffIcon,
-        flashOffText: flashOffText,
-      );
-    }
-    // Return result from Image QRCode
-    if (result is String) {
-      return result;
-    }
-  }
+// @Deprecated(
+//     'Should not use directly now\n Should extend AppQRCodeScanner function with permission function implemented')
+// Future<String> tryOpenScanner(
+//   BuildContext _, {
+//   bool hvCameraPerm,
+//   bool hvPhotoPerm,
+//   CustomModal cameraPermModal,
+//   CustomModal photoPermModal,
+//   String camtPgTitle,
+//   IconData imgPickerIcon,
+//   IconData flashOnIcon,
+//   String flashOnText,
+//   IconData flashOffIcon,
+//   String flashOffText,
+// }) async {
+//   if (hvCameraPerm == false) {
+//     // No permission and has to be done in system setting
+//     var result = Navigator.of(_).push(
+//       cameraPermModal ??
+//           CameraPermModal(
+//             disabled: true,
+//             openPhotoAction: hvPhotoPerm != false
+//                 ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
+//                 : null,
+//           ),
+//     );
+//     return result is String ? result : '';
+//   } else if (hvCameraPerm == true) {
+//     // Already hv permission
+//     return _openScanner(
+//       _,
+//       hvPhotoPerm: hvPhotoPerm,
+//       photoPermModal: photoPermModal,
+//       pgTitle: camtPgTitle,
+//       imgPickerIcon: imgPickerIcon,
+//       flashOnIcon: flashOnIcon,
+//       flashOnText: flashOnText,
+//       flashOffIcon: flashOffIcon,
+//       flashOffText: flashOffText,
+//     );
+//   } else {
+//     // Ask permission
+//     var result = await Navigator.of(_).push(
+//       cameraPermModal ??
+//           CameraPermModal(
+//             openPhotoAction: hvPhotoPerm != false
+//                 ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
+//                 : null,
+//           ),
+//     );
+//     // Open Camera modal to scan QRCode
+//     if (result == true) {
+//       return _openScanner(
+//         _,
+//         hvPhotoPerm: hvPhotoPerm,
+//         photoPermModal: photoPermModal,
+//         pgTitle: camtPgTitle,
+//         imgPickerIcon: imgPickerIcon,
+//         flashOnIcon: flashOnIcon,
+//         flashOnText: flashOnText,
+//         flashOffIcon: flashOffIcon,
+//         flashOffText: flashOffText,
+//       );
+//     }
+//     // Return result from Image QRCode
+//     if (result is String) {
+//       return result;
+//     }
+//   }
 
-  return '';
-}
+//   return '';
+// }
 
 Future<String> _openScanner(
   BuildContext _, {
@@ -203,8 +215,9 @@ Future<String> _openScanner(
 Widget _imgPickerbtn(
   BuildContext _,
   bool hvPhotoPerm,
-  CustomModal photoPermModal,
-) {
+  CustomModal photoPermModal, {
+  Color themeColor,
+}) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.center,
     crossAxisAlignment: CrossAxisAlignment.center,
@@ -215,7 +228,8 @@ Widget _imgPickerbtn(
       ),
       FlatButton(
         onPressed: () async {
-          var result = await _tryOpenImgPicker(_, hvPhotoPerm, photoPermModal);
+          var result = await _tryOpenImgPicker(_, hvPhotoPerm, photoPermModal,
+              themeColor: themeColor);
           Navigator.of(_).pop(result);
         },
         child: Text('Scan QRCode from Image'),
@@ -227,12 +241,13 @@ Widget _imgPickerbtn(
 Future<String> _tryOpenImgPicker(
   BuildContext _,
   bool hvPhotoPerm,
-  CustomModal photoPermModal,
-) async {
+  CustomModal photoPermModal, {
+  Color themeColor,
+}) async {
   if (hvPhotoPerm == false) {
     /// Advice user to enable this function in setting if no permission
-    await Navigator.of(_)
-        .push(photoPermModal ?? PhotoLibraryPermModal(disabled: true));
+    await Navigator.of(_).push(photoPermModal ??
+        PhotoLibraryPermModal(disabled: true, themeColor: themeColor));
     return '';
   } else if (hvPhotoPerm == true) {
     return _openImgPicker();
@@ -240,8 +255,8 @@ Future<String> _tryOpenImgPicker(
     /// Open image picker if permission is already granted
   } else {
     /// Ask user to grant permission
-    var allow =
-        await Navigator.of(_).push(photoPermModal ?? PhotoLibraryPermModal());
+    var allow = await Navigator.of(_)
+        .push(photoPermModal ?? PhotoLibraryPermModal(themeColor: themeColor));
     if (allow == true) {
       return _openImgPicker();
     }
