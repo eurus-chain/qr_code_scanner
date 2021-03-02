@@ -110,79 +110,6 @@ abstract class AppQRCodeScanner {
   Future<bool> ckPhotoPermission();
 }
 
-// @Deprecated(
-//     'Should not use directly now\n Should extend AppQRCodeScanner function with permission function implemented')
-// Future<String> tryOpenScanner(
-//   BuildContext _, {
-//   bool hvCameraPerm,
-//   bool hvPhotoPerm,
-//   CustomModal cameraPermModal,
-//   CustomModal photoPermModal,
-//   String camtPgTitle,
-//   IconData imgPickerIcon,
-//   IconData flashOnIcon,
-//   String flashOnText,
-//   IconData flashOffIcon,
-//   String flashOffText,
-// }) async {
-//   if (hvCameraPerm == false) {
-//     // No permission and has to be done in system setting
-//     var result = Navigator.of(_).push(
-//       cameraPermModal ??
-//           CameraPermModal(
-//             disabled: true,
-//             openPhotoAction: hvPhotoPerm != false
-//                 ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
-//                 : null,
-//           ),
-//     );
-//     return result is String ? result : '';
-//   } else if (hvCameraPerm == true) {
-//     // Already hv permission
-//     return _openScanner(
-//       _,
-//       hvPhotoPerm: hvPhotoPerm,
-//       photoPermModal: photoPermModal,
-//       pgTitle: camtPgTitle,
-//       imgPickerIcon: imgPickerIcon,
-//       flashOnIcon: flashOnIcon,
-//       flashOnText: flashOnText,
-//       flashOffIcon: flashOffIcon,
-//       flashOffText: flashOffText,
-//     );
-//   } else {
-//     // Ask permission
-//     var result = await Navigator.of(_).push(
-//       cameraPermModal ??
-//           CameraPermModal(
-//             openPhotoAction: hvPhotoPerm != false
-//                 ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal)
-//                 : null,
-//           ),
-//     );
-//     // Open Camera modal to scan QRCode
-//     if (result == true) {
-//       return _openScanner(
-//         _,
-//         hvPhotoPerm: hvPhotoPerm,
-//         photoPermModal: photoPermModal,
-//         pgTitle: camtPgTitle,
-//         imgPickerIcon: imgPickerIcon,
-//         flashOnIcon: flashOnIcon,
-//         flashOnText: flashOnText,
-//         flashOffIcon: flashOffIcon,
-//         flashOffText: flashOffText,
-//       );
-//     }
-//     // Return result from Image QRCode
-//     if (result is String) {
-//       return result;
-//     }
-//   }
-
-//   return '';
-// }
-
 Future<String> _openScanner(
   BuildContext _, {
   bool hvPhotoPerm,
@@ -223,9 +150,6 @@ Widget _imgPickerbtn(
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
       Text('-- Or --'),
-      Padding(
-        padding: EdgeInsets.only(bottom: 10),
-      ),
       FlatButton(
         onPressed: () async {
           var result = await _tryOpenImgPicker(_, hvPhotoPerm, photoPermModal,

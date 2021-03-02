@@ -57,10 +57,11 @@ class PermModalTemplate extends CustomModal {
                     topRight: Radius.circular(15)),
                 color: Colors.white,
               ),
+              alignment: Alignment.center,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Spacer(flex: 1),
                   Icon(
                     icon,
                     color: iconColor ?? Color.fromRGBO(0, 159, 221, 1),
@@ -90,7 +91,7 @@ class PermModalTemplate extends CustomModal {
                       ),
                     ),
                   ),
-                  _cusSpacer(p: 55),
+                  _cusSpacer(p: 35),
                   if (hideDecline != false)
                     Padding(
                       padding: EdgeInsets.all(12),
@@ -108,13 +109,7 @@ class PermModalTemplate extends CustomModal {
                         ),
                       ),
                     ),
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      alignment: Alignment(0, 0),
-                      child: otherAction ?? Padding(padding: EdgeInsets.zero),
-                    ),
-                  ),
+                  otherAction ?? Padding(padding: EdgeInsets.zero),
                 ],
               ),
             ),
