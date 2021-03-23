@@ -53,64 +53,68 @@ class PermModalTemplate extends CustomModal {
               padding: EdgeInsets.all(35),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15)),
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
                 color: Colors.white,
               ),
               alignment: Alignment.center,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    color: iconColor ?? Color.fromRGBO(0, 159, 221, 1),
-                    size: MediaQuery.of(context).size.width / 3,
-                  ),
-                  _cusSpacer(),
-                  Text(
-                    title,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
-                    textAlign: TextAlign.center,
-                  ),
-                  _cusSpacer(p: 15),
-                  Text(desc, textAlign: TextAlign.center),
-                  _cusSpacer(p: 35),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: color ?? Color.fromRGBO(0, 159, 221, 1),
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      color: iconColor ?? Color.fromRGBO(0, 159, 221, 1),
+                      size: MediaQuery.of(context).size.width / 3,
                     ),
-                    child: FlatButton(
-                      minWidth: double.infinity,
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(acceptText ?? 'OK',
-                            style: TextStyle(color: Colors.white)),
+                    _cusSpacer(),
+                    Text(
+                      title,
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
+                      textAlign: TextAlign.center,
+                    ),
+                    _cusSpacer(p: 15),
+                    Text(desc, textAlign: TextAlign.center),
+                    _cusSpacer(p: 35),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: color ?? Color.fromRGBO(0, 159, 221, 1),
+                        borderRadius: BorderRadius.all(Radius.circular(15)),
                       ),
-                    ),
-                  ),
-                  _cusSpacer(p: 35),
-                  if (hideDecline != false)
-                    Padding(
-                      padding: EdgeInsets.all(12),
-                    )
-                  else
-                    FlatButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Padding(
-                        padding: EdgeInsets.zero,
-                        child: Text(
-                          declineText ?? 'Don\'t Allow',
-                          style: TextStyle(
-                            color: color ?? Color.fromRGBO(0, 159, 221, 1),
-                          ),
+                      child: FlatButton(
+                        minWidth: double.infinity,
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text(acceptText ?? 'OK',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ),
                     ),
-                  otherAction ?? Padding(padding: EdgeInsets.zero),
-                ],
+                    _cusSpacer(p: 35),
+                    if (hideDecline != false)
+                      Padding(
+                        padding: EdgeInsets.all(12),
+                      )
+                    else
+                      FlatButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Padding(
+                          padding: EdgeInsets.zero,
+                          child: Text(
+                            declineText ?? 'Don\'t Allow',
+                            style: TextStyle(
+                              color: color ?? Color.fromRGBO(0, 159, 221, 1),
+                            ),
+                          ),
+                        ),
+                      ),
+                    otherAction ?? Padding(padding: EdgeInsets.zero),
+                  ],
+                ),
               ),
             ),
           ),

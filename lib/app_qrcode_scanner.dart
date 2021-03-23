@@ -26,6 +26,7 @@ abstract class AppQRCodeScanner {
   String flashOffText;
   CustomModal cameraPermModal;
   CustomModal photoPermModal;
+  String scanningText;
 
   Future<String> tryOpenScanner(BuildContext _) async {
     var hvCamPerm = await ckCameraPermission();
@@ -61,6 +62,7 @@ abstract class AppQRCodeScanner {
         flashOnText: flashOnText,
         flashOffIcon: flashOffIcon,
         flashOffText: flashOffText,
+        scanningText: scanningText,
       );
     } else {
       // Ask permission
@@ -90,6 +92,7 @@ abstract class AppQRCodeScanner {
           flashOnText: flashOnText,
           flashOffIcon: flashOffIcon,
           flashOffText: flashOffText,
+          scanningText: scanningText,
         );
       }
       // Return result from Image QRCode
@@ -120,6 +123,7 @@ Future<String> _openScanner(
   String flashOnText,
   IconData flashOffIcon,
   String flashOffText,
+  String scanningText,
 }) async {
   var result = await Navigator.of(_).push(
     QRCodeModal(
@@ -131,6 +135,7 @@ Future<String> _openScanner(
       flashOnText: flashOnText,
       flashOffIcon: flashOffIcon,
       flashOffText: flashOffText,
+      scanningText: scanningText,
     ),
   );
 

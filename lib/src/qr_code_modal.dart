@@ -18,6 +18,8 @@ class QRCodeModal extends CustomModal {
     this.flashOnText,
     this.flashOffIcon,
     this.flashOffText,
+    this.scanningText,
+    this.themeColor,
   }) : super();
 
   final bool hvPhotoPerm;
@@ -29,6 +31,8 @@ class QRCodeModal extends CustomModal {
   final String flashOnText;
   final IconData flashOffIcon;
   final String flashOffText;
+  final String scanningText;
+  final Color themeColor;
 
   @override
   Widget buildPage(
@@ -49,6 +53,8 @@ class QRCodeModal extends CustomModal {
         flashOnText: flashOnText ?? 'Lights On',
         flashOffIcon: flashOffIcon ?? Icons.flash_off,
         flashOffText: flashOffText ?? 'Lights Off',
+        scanningText: scanningText ?? 'Scanning',
+        themeColor: themeColor ?? Color(0xff009FDD),
       ),
     );
   }
@@ -64,6 +70,8 @@ class _QrCodeModalPage extends StatefulWidget {
     this.flashOnText,
     this.flashOffIcon,
     this.flashOffText,
+    this.scanningText,
+    this.themeColor,
   }) : super();
 
   final bool hvPhotoPerm;
@@ -75,6 +83,8 @@ class _QrCodeModalPage extends StatefulWidget {
   final String flashOnText;
   final IconData flashOffIcon;
   final String flashOffText;
+  final String scanningText;
+  final Color themeColor;
 
   @override
   _QrCodeModalPageState createState() => _QrCodeModalPageState();
@@ -113,7 +123,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
           onQRViewCreated: _onQRViewCreated,
           pgTitle: widget.pgTitle,
           overlay: QrScannerOverlayShape(
-            borderColor: Color.fromRGBO(0, 179, 243, 1),
+            borderColor: widget.themeColor,
             borderRadius: 0,
             borderLength: borderLength,
             borderWidth: 8,
@@ -157,36 +167,50 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                 width: scanArea,
               ),
               Expanded(
-                child: Center(
-                  child: FlatButton(
-                    onPressed: () {
-                      _controller?.toggleFlash();
-                      setState(() {
-                        _flashOn = !_flashOn;
-                      });
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                              _flashOn
-                                  ? widget.flashOffIcon
-                                  : widget.flashOnIcon,
-                              color: Colors.white,
-                              size: scanArea / 8),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 10),
-                          ),
-                          Text(
-                            _flashOn ? widget.flashOffText : widget.flashOnText,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      child: Text(
+                        widget.scanningText,
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                  ),
+                    FlatButton(
+                      onPressed: () {
+                        _controller?.toggleFlash();
+                        setState(() {
+                          _flashOn = !_flashOn;
+                        });
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                                _flashOn
+                                    ? widget.flashOnIcon
+                                    : widget.flashOffIcon,
+                                color: Colors.white,
+                                size: scanArea / 8),
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 10),
+                            ),
+                            Text(
+                              _flashOn
+                                  ? widget.flashOnText
+                                  : widget.flashOffText,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(padding: EdgeInsets.only(bottom: 50)),
+                  ],
                 ),
               ),
             ],
