@@ -155,7 +155,6 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                           await _controller?.pauseCamera();
                           await _tryOpenImagePicker(context)
                               .whenComplete(() => _controller?.resumeCamera());
-                          await _tryOpenImagePicker(context);
                         },
                       )
                     ],
@@ -238,10 +237,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   void _onScannedData(String val) {
     _result = val;
     if (_controller != null) {
-      _controller
-        ..pauseCamera()
-        ..dispose();
-      _controller = null;
+      _controller.pauseCamera();
     }
     Future.delayed(
       Duration(milliseconds: 0),
@@ -253,11 +249,16 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
     if (widget.hvPhotoPerm == true || _photoPerm == true) {
       await _openImagePicker(_);
     } else if (widget.hvPhotoPerm == false || _photoPerm == false) {
-      await Navigator.of(_).push(PhotoLibraryPermModal(disabled: true));
+      await Navigator.of(_).push(PhotoLibraryPermModal(
+        disabled: true,
+        themeColor: widget.themeColor,
+      ));
       return;
     } else {
-      var photoPrem = await Navigator.of(_)
-          .push(widget.photoPermModal ?? PhotoLibraryPermModal());
+      var photoPrem = await Navigator.of(_).push(
+        widget.photoPermModal ??
+            PhotoLibraryPermModal(themeColor: widget.themeColor),
+      );
       if (photoPrem != true) {
         return;
       }
@@ -267,15 +268,14 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
 
   Future _openImagePicker(BuildContext _) async {
     await ImagePicker()
-        .getImage(
-      source: ImageSource.gallery,
-    )
+        .getImage(source: ImageSource.gallery)
         .then((pickedFile) async {
+          print('normal then pickedFile $pickedFile');
       if (pickedFile != null) await _decode(pickedFile.path);
       setState(() {
         _photoPerm = true;
       });
-    });
+    }).catchError((e) => print('disalled $e'));
   }
 
   Future _decode(String file) async {
@@ -287,6 +287,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   void dispose() {
     if (_controller != null) {
       _controller.dispose();
+      _controller = null;
     }
     super.dispose();
   }

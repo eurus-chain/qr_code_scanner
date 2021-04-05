@@ -8,15 +8,17 @@ class CameraPermModal extends PermModalTemplate {
     this.openPhotoAction,
     this.themeColor,
   }) : super(
-          title: 'Camera Usage',
+          title: 'Camera${disabled == true ? ' is Disabled' : ''}',
           desc: disabled == true
-              ? 'Please allow us to access your Camera in System Setting'
+              ? 'Please allow us to access your Camera in your System Setting'
               : 'Get Started by allowing us to use your camera',
           color: themeColor,
-          icon: Icons.camera_alt_rounded,
-          iconColor: disabled == true ? Colors.grey : themeColor,
+          icon: disabled == true
+              ? Icons.warning_rounded
+              : Icons.camera_alt_rounded,
+          iconColor: disabled == true ? Color(0xffFB4245) : themeColor,
           hideDecline: disabled ?? false,
-          acceptText: disabled == true ? 'Dismiss' : null,
+          acceptText: disabled == true ? 'Ok' : null,
           otherAction: openPhotoAction,
         );
 

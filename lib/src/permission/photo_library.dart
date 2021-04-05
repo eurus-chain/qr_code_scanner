@@ -7,17 +7,17 @@ class PhotoLibraryPermModal extends PermModalTemplate {
     this.disabled,
     this.themeColor,
   }) : super(
-          title: 'Photo Library',
+          title: 'Photo Library${disabled == true ? ' is Disabled' : ''}',
           desc: disabled == true
-              ? 'Please allow us to access your Photo Library in System Setting'
+              ? 'Please allow us to access your Photo Library in your System Setting'
               : 'Get Started by allowing us to access your Photo Library',
           color: themeColor,
           icon: disabled == true
-              ? Icons.image_not_supported_rounded
+              ? Icons.warning_rounded
               : Icons.image_rounded,
-          iconColor: disabled == true ? Colors.grey : themeColor,
+          iconColor: disabled == true ? Color(0xffFB4245) : themeColor,
           hideDecline: disabled ?? false,
-          acceptText: disabled == true ? 'Dismiss' : null,
+          acceptText: disabled == true ? 'Ok' : null,
         );
 
   final bool disabled;

@@ -63,6 +63,7 @@ abstract class AppQRCodeScanner {
         flashOffIcon: flashOffIcon,
         flashOffText: flashOffText,
         scanningText: scanningText,
+        themeColor: themeColor,
       );
     } else {
       // Ask permission
@@ -93,6 +94,7 @@ abstract class AppQRCodeScanner {
           flashOffIcon: flashOffIcon,
           flashOffText: flashOffText,
           scanningText: scanningText,
+          themeColor: themeColor,
         );
       }
       // Return result from Image QRCode
@@ -124,6 +126,7 @@ Future<String> _openScanner(
   IconData flashOffIcon,
   String flashOffText,
   String scanningText,
+  Color themeColor,
 }) async {
   var result = await Navigator.of(_).push(
     QRCodeModal(
@@ -136,6 +139,7 @@ Future<String> _openScanner(
       flashOffIcon: flashOffIcon,
       flashOffText: flashOffText,
       scanningText: scanningText,
+      themeColor: themeColor,
     ),
   );
 
@@ -157,8 +161,12 @@ Widget _imgPickerbtn(
       Text('-- Or --'),
       FlatButton(
         onPressed: () async {
-          var result = await _tryOpenImgPicker(_, hvPhotoPerm, photoPermModal,
-              themeColor: themeColor);
+          var result = await _tryOpenImgPicker(
+            _,
+            hvPhotoPerm,
+            photoPermModal,
+            themeColor: themeColor,
+          );
           Navigator.of(_).pop(result);
         },
         child: Text('Scan QRCode from Image'),
@@ -196,9 +204,9 @@ Future<String> _tryOpenImgPicker(
 
 Future<String> _openImgPicker() async {
   try {
-    final pickedFile = await ImagePicker().getImage(
-      source: ImageSource.gallery,
-    );
+    final _picker = ImagePicker();
+    final pickedFile = await _picker.getImage(source: ImageSource.gallery);
+
     if (pickedFile != null) {
       return QrCodeToolsPlugin.decodeFrom(pickedFile.path);
     }

@@ -98,6 +98,7 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    _aniCon.dispose();
     super.dispose();
     WidgetsBinding.instance.removeObserver(_observer);
   }
@@ -305,8 +306,11 @@ class QRViewController {
   bool get hasPermissions => _hasPermissions;
 
   /// Starts the barcode scanner
-  Future<void> _startScan(GlobalKey key, QrScannerOverlayShape overlay,
-      List<BarcodeFormat> barcodeFormats) async {
+  Future<void> _startScan(
+    GlobalKey key,
+    QrScannerOverlayShape overlay,
+    List<BarcodeFormat> barcodeFormats,
+  ) async {
     // We need to update the dimension before the scan is started.
     try {
       await QRViewController.updateDimensions(key, _channel, overlay: overlay);
