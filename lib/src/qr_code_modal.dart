@@ -235,13 +235,13 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   }
 
   void _onScannedData(String val) {
-    _result = val;
+    // _result = val;
     if (_controller != null) {
       _controller.pauseCamera();
     }
     Future.delayed(
-      Duration(milliseconds: 0),
-      () => Navigator.of(_context).pop(_result),
+      Duration(milliseconds: 100),
+      () => Navigator.of(_context).pop(val),
     );
   }
 
@@ -267,15 +267,15 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   }
 
   Future _openImagePicker(BuildContext _) async {
-    await ImagePicker()
-        .getImage(source: ImageSource.gallery)
-        .then((pickedFile) async {
-          print('normal then pickedFile $pickedFile');
-      if (pickedFile != null) await _decode(pickedFile.path);
-      setState(() {
-        _photoPerm = true;
-      });
-    }).catchError((e) => print('disalled $e'));
+    await ImagePicker().getImage(source: ImageSource.gallery, maxWidth: 500).then(
+      (pickedFile) async {
+        print('normal then pickedFile $pickedFile');
+        if (pickedFile != null) await _decode(pickedFile.path);
+        setState(() {
+          _photoPerm = true;
+        });
+      },
+    ).catchError((e) => print('disallowed $e'));
   }
 
   Future _decode(String file) async {
