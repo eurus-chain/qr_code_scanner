@@ -95,11 +95,8 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
 
   QRViewController _controller;
   bool _flashOn = false;
-  String _result = '';
 
   bool _photoPerm;
-
-  BuildContext _context;
 
   @override
   void initState() {
@@ -109,8 +106,6 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
 
   @override
   Widget build(BuildContext context) {
-    _context = context;
-
     var size = MediaQuery.of(context).size;
     var maxLength = size.width > size.height ? size.height : size.width;
     var scanArea = maxLength * 0.75;
@@ -231,17 +226,19 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
 
   void _onQRViewCreated(QRViewController controller) {
     _controller = controller;
-    _controller.scannedDataStream.listen((c) => _onScannedData(c.code));
+    _controller.scannedDataStream.listen((c) async {
+      await _controller.pauseCamera();
+      await _onScannedData(c.code);
+    });
   }
 
-  void _onScannedData(String val) {
-    // _result = val;
+  Future<void> _onScannedData(String val) async {
     if (_controller != null) {
-      _controller.pauseCamera();
+      await _controller.pauseCamera();
     }
     Future.delayed(
-      Duration(milliseconds: 100),
-      () => Navigator.of(_context).pop(val),
+      Duration(milliseconds: 500),
+      () => Navigator.of(context).pop(val),
     );
   }
 
@@ -271,16 +268,13 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
       (pickedFile) async {
         print('normal then pickedFile $pickedFile');
         if (pickedFile != null) await _decode(pickedFile.path);
-        setState(() {
-          _photoPerm = true;
-        });
       },
     ).catchError((e) => print('disallowed $e'));
   }
 
   Future _decode(String file) async {
     var data = await QrCodeToolsPlugin.decodeFrom(file);
-    _onScannedData(data);
+    await _onScannedData(data);
   }
 
   @override

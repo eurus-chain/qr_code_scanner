@@ -205,7 +205,7 @@ Future<String> _tryOpenImgPicker(
 Future<String> _openImgPicker() async {
   try {
     final _picker = ImagePicker();
-    final pickedFile = await _picker.getImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.getImage(source: ImageSource.gallery, maxWidth: 500);
 
     if (pickedFile != null) {
       return QrCodeToolsPlugin.decodeFrom(pickedFile.path);
