@@ -7,9 +7,13 @@ import 'src/permission/photo_library.dart';
 import 'src/qr_code_modal.dart';
 import 'src/template/cus_modal.dart';
 
+export 'src/permission/camera.dart';
+export 'src/permission/photo_library.dart';
 export 'src/qr_code_modal.dart';
 export 'src/qr_code_scanner.dart';
 export 'src/qr_scanner_overlay_shape.dart';
+export 'src/template/cus_modal.dart';
+export 'src/template/prem_template.dart';
 export 'src/types/barcode.dart';
 export 'src/types/barcode_format.dart';
 export 'src/types/camera.dart';
