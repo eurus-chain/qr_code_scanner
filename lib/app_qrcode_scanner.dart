@@ -28,8 +28,6 @@ abstract class AppQRCodeScanner {
   String flashOnText;
   IconData flashOffIcon;
   String flashOffText;
-  CustomModal cameraPermModal;
-  CustomModal photoPermModal;
   String scanningText;
 
   Future<String> tryOpenScanner(BuildContext _) async {
@@ -39,19 +37,15 @@ abstract class AppQRCodeScanner {
     if (hvCamPerm == false) {
       // No permission and has to be done in system setting
       var result = Navigator.of(_).push(
-        cameraPermModal ??
-            CameraPermModal(
-              disabled: true,
-              openPhotoAction: hvPhotoPerm != false
-                  ? _imgPickerbtn(
-                      _,
-                      hvPhotoPerm,
-                      photoPermModal,
-                      themeColor: themeColor,
-                    )
-                  : null,
+        genCameraPermModal(
+            true,
+            imgPickerBtn(
+              _,
+              hvPhotoPerm,
+              genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
               themeColor: themeColor,
             ),
+            themeColor: themeColor),
       );
       return result is String ? result : '';
     } else if (hvCamPerm == true) {
@@ -59,7 +53,7 @@ abstract class AppQRCodeScanner {
       return _openScanner(
         _,
         hvPhotoPerm: hvPhotoPerm,
-        photoPermModal: photoPermModal,
+        photoPermModal: genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
         pgTitle: camtPgTitle,
         imgPickerIcon: imgPickerIcon,
         flashOnIcon: flashOnIcon,
@@ -72,25 +66,23 @@ abstract class AppQRCodeScanner {
     } else {
       // Ask permission
       var result = await Navigator.of(_).push(
-        cameraPermModal ??
-            CameraPermModal(
-              openPhotoAction: hvPhotoPerm != false
-                  ? _imgPickerbtn(
-                      _,
-                      hvPhotoPerm,
-                      photoPermModal,
-                      themeColor: themeColor,
-                    )
-                  : null,
+        genCameraPermModal(
+            hvCamPerm,
+            imgPickerBtn(
+              _,
+              hvPhotoPerm,
+              genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
               themeColor: themeColor,
             ),
+            themeColor: themeColor),
       );
       // Open Camera modal to scan QRCode
       if (result == true) {
         return _openScanner(
           _,
           hvPhotoPerm: hvPhotoPerm,
-          photoPermModal: photoPermModal,
+          photoPermModal:
+              genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
           pgTitle: camtPgTitle,
           imgPickerIcon: imgPickerIcon,
           flashOnIcon: flashOnIcon,
@@ -110,6 +102,17 @@ abstract class AppQRCodeScanner {
     return '';
   }
 
+  Widget imgPickerBtn(
+    BuildContext _,
+    bool hvPhotoPerm,
+    CustomModal photoPermModal, {
+    Color themeColor,
+  }) {
+    return hvPhotoPerm != false
+        ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal, themeColor: themeColor)
+        : null;
+  }
+
   /// Return permission status of resourses
   ///
   /// null:   Have to ask for permission
@@ -117,6 +120,22 @@ abstract class AppQRCodeScanner {
   /// false:  Permission denied
   Future<bool> ckCameraPermission();
   Future<bool> ckPhotoPermission();
+
+  CustomModal genCameraPermModal(
+    bool disabled,
+    Widget openPhotoAction, {
+    Color themeColor,
+  }) {
+    return CameraPermModal(
+      disabled: disabled,
+      openPhotoAction: openPhotoAction,
+      themeColor: themeColor,
+    );
+  }
+
+  CustomModal genPhotoPermModal(bool disabled, {Color themeColor}) {
+    return PhotoLibraryPermModal(disabled: true, themeColor: themeColor);
+  }
 }
 
 Future<String> _openScanner(
@@ -165,7 +184,7 @@ Widget _imgPickerbtn(
       Text('-- Or --'),
       FlatButton(
         onPressed: () async {
-          var result = await _tryOpenImgPicker(
+          var result = await tryOpenImgPicker(
             _,
             hvPhotoPerm,
             photoPermModal,
@@ -179,7 +198,7 @@ Widget _imgPickerbtn(
   );
 }
 
-Future<String> _tryOpenImgPicker(
+Future<String> tryOpenImgPicker(
   BuildContext _,
   bool hvPhotoPerm,
   CustomModal photoPermModal, {
@@ -209,7 +228,8 @@ Future<String> _tryOpenImgPicker(
 Future<String> _openImgPicker() async {
   try {
     final _picker = ImagePicker();
-    final pickedFile = await _picker.getImage(source: ImageSource.gallery, maxWidth: 500);
+    final pickedFile =
+        await _picker.getImage(source: ImageSource.gallery, maxWidth: 500);
 
     if (pickedFile != null) {
       return QrCodeToolsPlugin.decodeFrom(pickedFile.path);
