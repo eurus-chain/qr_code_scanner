@@ -12,6 +12,7 @@ class QRCodeModal extends CustomModal {
   QRCodeModal({
     this.hvPhotoPerm,
     this.photoPermModal,
+    this.photoDisabledPermModal,
     this.pgTitle,
     this.imgPickerIcon,
     this.flashOnIcon,
@@ -24,6 +25,7 @@ class QRCodeModal extends CustomModal {
 
   final bool hvPhotoPerm;
   final CustomModal photoPermModal;
+  final CustomModal photoDisabledPermModal;
 
   final String pgTitle;
   final IconData imgPickerIcon;
@@ -47,6 +49,7 @@ class QRCodeModal extends CustomModal {
       child: _QrCodeModalPage(
         hvPhotoPerm: hvPhotoPerm,
         photoPermModal: photoPermModal,
+        photoDisabledPermModal: photoDisabledPermModal,
         pgTitle: pgTitle ?? 'Scan',
         imgPickerIcon: imgPickerIcon ?? Icons.image_outlined,
         flashOnIcon: flashOnIcon ?? Icons.flash_on,
@@ -64,7 +67,8 @@ class _QrCodeModalPage extends StatefulWidget {
   _QrCodeModalPage({
     this.hvPhotoPerm,
     this.photoPermModal,
-    this.pgTitle = 'Scan',
+    this.photoDisabledPermModal,
+    this.pgTitle,
     this.imgPickerIcon,
     this.flashOnIcon,
     this.flashOnText,
@@ -76,6 +80,7 @@ class _QrCodeModalPage extends StatefulWidget {
 
   final bool hvPhotoPerm;
   final CustomModal photoPermModal;
+  final CustomModal photoDisabledPermModal;
 
   final String pgTitle;
   final IconData imgPickerIcon;
@@ -138,7 +143,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                       icon: Icon(Icons.arrow_back_ios),
                       color: Colors.white,
                       onPressed: () {
-                        Navigator.of(context).pop('empty');
+                        Navigator.pop(context, 'empty');
                       },
                     ),
                     title: Text(widget.pgTitle),
@@ -148,8 +153,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                         color: Colors.white,
                         onPressed: () async {
                           await _controller?.pauseCamera();
-                          await _tryOpenImagePicker(context)
-                              .whenComplete(() => _controller?.resumeCamera());
+                          await _tryOpenImagePicker(context).whenComplete(() => _controller?.resumeCamera());
                         },
                       )
                     ],
@@ -184,19 +188,13 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                                _flashOn
-                                    ? widget.flashOnIcon
-                                    : widget.flashOffIcon,
-                                color: Colors.white,
-                                size: scanArea / 8),
+                            Icon(_flashOn ? widget.flashOnIcon : widget.flashOffIcon,
+                                color: Colors.white, size: scanArea / 8),
                             Padding(
                               padding: EdgeInsets.only(bottom: 10),
                             ),
                             Text(
-                              _flashOn
-                                  ? widget.flashOnText
-                                  : widget.flashOffText,
+                              _flashOn ? widget.flashOnText : widget.flashOffText,
                               style: TextStyle(color: Colors.white),
                             ),
                           ],
@@ -238,7 +236,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
     }
     Future.delayed(
       Duration(milliseconds: 500),
-      () => Navigator.of(context).pop(val),
+      () => Navigator.pop(context, val),
     );
   }
 
@@ -246,15 +244,19 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
     if (widget.hvPhotoPerm == true || _photoPerm == true) {
       await _openImagePicker(_);
     } else if (widget.hvPhotoPerm == false || _photoPerm == false) {
-      await Navigator.of(_).push(PhotoLibraryPermModal(
-        disabled: true,
-        themeColor: widget.themeColor,
-      ));
+      await Navigator.push(
+        _,
+        widget.photoDisabledPermModal ??
+        PhotoLibraryPermModal(
+          disabled: true,
+          themeColor: widget.themeColor,
+        ),
+      );
       return;
     } else {
-      var photoPrem = await Navigator.of(_).push(
-        widget.photoPermModal ??
-            PhotoLibraryPermModal(themeColor: widget.themeColor),
+      var photoPrem = await Navigator.push(
+        _,
+        widget.photoPermModal ?? PhotoLibraryPermModal(themeColor: widget.themeColor),
       );
       if (photoPrem != true) {
         return;
@@ -266,7 +268,6 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   Future _openImagePicker(BuildContext _) async {
     await ImagePicker().getImage(source: ImageSource.gallery, maxWidth: 500).then(
       (pickedFile) async {
-        print('normal then pickedFile $pickedFile');
         if (pickedFile != null) await _decode(pickedFile.path);
       },
     ).catchError((e) => print('disallowed $e'));

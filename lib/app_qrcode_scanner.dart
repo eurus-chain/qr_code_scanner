@@ -42,7 +42,7 @@ abstract class AppQRCodeScanner {
             imgPickerBtn(
               _,
               hvPhotoPerm,
-              genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
+              genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
               themeColor: themeColor,
             ),
             themeColor: themeColor),
@@ -53,7 +53,8 @@ abstract class AppQRCodeScanner {
       return _openScanner(
         _,
         hvPhotoPerm: hvPhotoPerm,
-        photoPermModal: genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
+        photoPermModal: genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
+        photoDisabledPermModal: genPhotoPermModal(true, themeColor: themeColor),
         pgTitle: camtPgTitle,
         imgPickerIcon: imgPickerIcon,
         flashOnIcon: flashOnIcon,
@@ -71,7 +72,7 @@ abstract class AppQRCodeScanner {
             imgPickerBtn(
               _,
               hvPhotoPerm,
-              genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
+              genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
               themeColor: themeColor,
             ),
             themeColor: themeColor),
@@ -81,8 +82,8 @@ abstract class AppQRCodeScanner {
         return _openScanner(
           _,
           hvPhotoPerm: hvPhotoPerm,
-          photoPermModal:
-              genPhotoPermModal(hvPhotoPerm, themeColor: themeColor),
+          photoPermModal: genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
+          photoDisabledPermModal: genPhotoPermModal(true, themeColor: themeColor),
           pgTitle: camtPgTitle,
           imgPickerIcon: imgPickerIcon,
           flashOnIcon: flashOnIcon,
@@ -108,9 +109,7 @@ abstract class AppQRCodeScanner {
     CustomModal photoPermModal, {
     Color themeColor,
   }) {
-    return hvPhotoPerm != false
-        ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal, themeColor: themeColor)
-        : null;
+    return hvPhotoPerm != false ? _imgPickerbtn(_, hvPhotoPerm == false, photoPermModal, themeColor: themeColor) : null;
   }
 
   /// Return permission status of resourses
@@ -134,7 +133,7 @@ abstract class AppQRCodeScanner {
   }
 
   CustomModal genPhotoPermModal(bool disabled, {Color themeColor}) {
-    return PhotoLibraryPermModal(disabled: true, themeColor: themeColor);
+    return PhotoLibraryPermModal(disabled: disabled, themeColor: themeColor);
   }
 }
 
@@ -142,6 +141,7 @@ Future<String> _openScanner(
   BuildContext _, {
   bool hvPhotoPerm,
   CustomModal photoPermModal,
+  CustomModal photoDisabledPermModal,
   String pgTitle,
   IconData imgPickerIcon,
   IconData flashOnIcon,
@@ -151,10 +151,12 @@ Future<String> _openScanner(
   String scanningText,
   Color themeColor,
 }) async {
-  var result = await Navigator.of(_).push(
+  var result = await Navigator.push(
+    _,
     QRCodeModal(
       hvPhotoPerm: hvPhotoPerm,
       photoPermModal: photoPermModal,
+      photoDisabledPermModal: photoDisabledPermModal,
       pgTitle: pgTitle,
       imgPickerIcon: imgPickerIcon,
       flashOnIcon: flashOnIcon,
@@ -206,8 +208,7 @@ Future<String> tryOpenImgPicker(
 }) async {
   if (hvPhotoPerm == false) {
     /// Advice user to enable this function in setting if no permission
-    await Navigator.of(_).push(photoPermModal ??
-        PhotoLibraryPermModal(disabled: true, themeColor: themeColor));
+    await Navigator.of(_).push(photoPermModal ?? PhotoLibraryPermModal(disabled: true, themeColor: themeColor));
     return '';
   } else if (hvPhotoPerm == true) {
     return _openImgPicker();
@@ -215,8 +216,7 @@ Future<String> tryOpenImgPicker(
     /// Open image picker if permission is already granted
   } else {
     /// Ask user to grant permission
-    var allow = await Navigator.of(_)
-        .push(photoPermModal ?? PhotoLibraryPermModal(themeColor: themeColor));
+    var allow = await Navigator.of(_).push(photoPermModal ?? PhotoLibraryPermModal(themeColor: themeColor));
     if (allow == true) {
       return _openImgPicker();
     }
@@ -228,8 +228,7 @@ Future<String> tryOpenImgPicker(
 Future<String> _openImgPicker() async {
   try {
     final _picker = ImagePicker();
-    final pickedFile =
-        await _picker.getImage(source: ImageSource.gallery, maxWidth: 500);
+    final pickedFile = await _picker.getImage(source: ImageSource.gallery, maxWidth: 500);
 
     if (pickedFile != null) {
       return QrCodeToolsPlugin.decodeFrom(pickedFile.path);

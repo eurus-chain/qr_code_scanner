@@ -86,7 +86,7 @@ class PermModalTemplate extends CustomModal {
                       ),
                       child: FlatButton(
                         minWidth: double.infinity,
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: () => Navigator.pop(context, true),
                         child: Padding(
                           padding: EdgeInsets.all(12),
                           child: Text(acceptText ?? 'OK',
@@ -101,7 +101,7 @@ class PermModalTemplate extends CustomModal {
                       )
                     else
                       FlatButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => Navigator.pop(context),
                         child: Padding(
                           padding: EdgeInsets.zero,
                           child: Text(
