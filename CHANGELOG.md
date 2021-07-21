@@ -1,3 +1,50 @@
+## 0.5.2
+#### Bugfixes
+* Increased delay to fix QRView opening zoomed in on some devices by adding small delay to updateDimensions(). (#250)
+* Updated ZXING from 3.3.0 to 3.4.1 (#369)
+* Fixed permission not being called correctly on Android (#351)
+
+## 0.5.1
+Removed web from library export.
+
+## 0.5.0
+* Added initial web-support. This function is still under development and not fully tested.
+* Fixed permissions on iOS.
+* Updated dependencies.
+
+## 0.4.0
+Stable null-safety support. (#278)
+
+## 0.3.5
+#### Bug fixes
+* Fixed QRView opening zoomed in on some devices by adding small delay to updateDimensions(). (#250)
+* Changed upc-A to EAN13 on iOS. (#262)
+* Fixed null-pointer on BarcodeFormat array on iOS. (#262)
+* Added LifecycleEventHandler to dispose(). (#265)
+
+## 0.3.4
+#### Bug fixes
+* Fixed No barcode view found on Android when calling controller.dispose() (#257)
+* Fixed Hot reload not working on Android.
+
+## 0.3.3
+#### Bug fixes
+* Fixed updateDimensions not being called causing zoom on iOS. (#250)
+* Fixed Android permission callback not working. (#251) (#252)
+* Fixed null-pointers after declining permission on Android.
+
+## 0.3.2
+#### Bug fixes
+* Fixed null-pointer when no overlay provided on iOS. (#245)
+* Fixed camera not stopping (green dot on iOS 14) when navigating to other page. (#240)
+
+## 0.3.1
+#### Bug fixes
+* Fixed permission callback on iOS & Android.
+* Fixed camera facing not working on Android.
+* Fixed scanArea not being honored on Android.
+* Updated ShapeBorder to QrScannerOverlayShape.
+
 ## 0.3.0
 #### Breaking change
 Its not necessary anymore to wrap the QRView in a SizeChangedLayoutNotifier because this is handled inside the plugin.
