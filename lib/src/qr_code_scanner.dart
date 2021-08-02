@@ -20,24 +20,22 @@ typedef PermissionSetCallback = void Function(QRViewController, bool);
 /// and the barcode scanner gets displayed.
 class QRView extends StatefulWidget {
   const QRView({
-    @required Key key,
-    @required this.onQRViewCreated,
-    @required this.pgTitle,
+    required Key key,
+    required this.onQRViewCreated,
+    required this.pgTitle,
     this.overlay,
     this.overlayMargin = EdgeInsets.zero,
     this.cameraFacing = CameraFacing.back,
     this.onPermissionSet,
     this.formatsAllowed,
-  })  : assert(key != null),
-        assert(onQRViewCreated != null),
-        super(key: key);
+  }) : super(key: key);
 
   /// [onQRViewCreated] gets called when the view is created
   final QRViewCreatedCallback onQRViewCreated;
 
   /// Use [overlay] to provide an overlay for the view.
   /// This can be used to create a certain scan area.
-  final QrScannerOverlayShape overlay;
+  final QrScannerOverlayShape? overlay;
 
   /// Use [overlayMargin] to provide a margin to [overlay]
   final EdgeInsetsGeometry overlayMargin;
@@ -49,10 +47,10 @@ class QRView extends StatefulWidget {
   final CameraFacing cameraFacing;
 
   /// Calls the provided [onPermissionSet] callback when the permission is set.
-  final PermissionSetCallback onPermissionSet;
+  final PermissionSetCallback? onPermissionSet;
 
   /// Use [formatsAllowed] to specify which formats needs to be scanned.
-  final List<BarcodeFormat> formatsAllowed;
+  final List<BarcodeFormat>? formatsAllowed;
 
   /// Scanner Page App Bar Title
   final String pgTitle;
@@ -62,10 +60,10 @@ class QRView extends StatefulWidget {
 }
 
 class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
-  var _channel;
-  var _observer;
+  MethodChannel? _channel;
+  late LifecycleEventHandler _observer;
 
-  AnimationController _aniCon;
+  late AnimationController _aniCon;
   bool lightOn = false;
 
   @override
@@ -77,11 +75,12 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
         resumeCallBack: () async => {
               if (_channel != null)
                 {
-                  QRViewController.updateDimensions(widget.key, _channel,
+                  QRViewController.updateDimensions(
+                      widget.key as GlobalKey, _channel!,
                       overlay: widget.overlay)
                 }
             });
-    WidgetsBinding.instance.addObserver(_observer);
+    WidgetsBinding.instance?.addObserver(_observer);
   }
 
   @override
@@ -100,13 +99,17 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
   void dispose() {
     _aniCon.dispose();
     super.dispose();
-    WidgetsBinding.instance.removeObserver(_observer);
+    WidgetsBinding.instance?.removeObserver(_observer);
   }
 
   bool onNotification(notification) {
     Future.microtask(() => {
-          QRViewController.updateDimensions(widget.key, _channel,
-              overlay: widget.overlay)
+          if (_channel != null)
+            QRViewController.updateDimensions(
+              widget.key as GlobalKey,
+              _channel!,
+              overlay: widget.overlay,
+            )
         });
 
     return false;
@@ -120,7 +123,7 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
         Container(
           padding: widget.overlayMargin,
           decoration: ShapeDecoration(
-            shape: widget.overlay,
+            shape: widget.overlay!,
           ),
         ),
         _getScanAnimation(),
@@ -135,7 +138,7 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
       child: Icon(
         Icons.qr_code_rounded,
         color: Colors.white,
-        size: widget.overlay.cutOutSize * 0.7,
+        size: widget.overlay!.cutOutSize * 0.7,
       ),
     );
   }
@@ -171,17 +174,17 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
   Widget _getScanAnimation() {
     return Center(
       child: Container(
-        width: widget.overlay.cutOutSize,
-        height: widget.overlay.cutOutSize,
+        width: widget.overlay!.cutOutSize,
+        height: widget.overlay!.cutOutSize,
         alignment: Alignment(0, -1),
         child: AnimatedBuilder(
           animation: _aniCon.view,
           builder: (_, __) {
             var scanAniRatio = 0.25;
-            var scanAniSize = widget.overlay.cutOutSize * scanAniRatio;
+            var scanAniSize = widget.overlay!.cutOutSize * scanAniRatio;
             var yOffset =
                 ((_aniCon.value - scanAniRatio) / (1 - scanAniRatio)) *
-                    widget.overlay.cutOutSize;
+                    widget.overlay!.cutOutSize;
 
             return Transform.translate(
               offset: Offset(0, _aniCon.value < scanAniRatio ? 0 : yOffset),
@@ -191,21 +194,21 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      widget.overlay.borderColor.withOpacity(
+                      widget.overlay!.borderColor.withOpacity(
                           _aniCon.value >= scanAniRatio
                               ? 0
                               : (1 - (_aniCon.value * 4))),
-                      widget.overlay.borderColor
+                      widget.overlay!.borderColor
                     ],
                   ),
                 ),
                 height: _aniCon.value < scanAniRatio
-                    ? (_aniCon.value * widget.overlay.cutOutSize)
+                    ? (_aniCon.value * widget.overlay!.cutOutSize)
                     : _aniCon.value > (1 - scanAniRatio) &&
-                            (widget.overlay.cutOutSize - yOffset) < scanAniSize
-                        ? widget.overlay.cutOutSize - yOffset
+                            (widget.overlay!.cutOutSize - yOffset) < scanAniSize
+                        ? widget.overlay!.cutOutSize - yOffset
                         : scanAniSize,
-                width: widget.overlay.cutOutSize,
+                width: widget.overlay!.cutOutSize,
                 child: Padding(
                   padding: EdgeInsets.zero,
                 ),
@@ -218,29 +221,23 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
   }
 
   void _onPlatformViewCreated(int id) {
-    // We pass the cutout size so that the scanner respects the scan area.
-    var cutOutSize = 0.0;
-    if (widget.overlay != null) {
-      cutOutSize = (widget.overlay).cutOutSize;
-    }
-
-    _channel = MethodChannel('net.touchcapture.qr.flutterqr/qrview_$id');
+    final channel = MethodChannel('net.touchcapture.qr.flutterqr/qrview_$id');
+    _channel = channel;
 
     // Start scan after creation of the view
-    final controller = QRViewController._(
-        _channel, widget.key, widget.onPermissionSet, widget.cameraFacing)
-      .._startScan(widget.key, widget.overlay, widget.formatsAllowed);
+    final controller = QRViewController._(channel, widget.key as GlobalKey,
+        widget.onPermissionSet, widget.cameraFacing)
+      .._startScan(
+          widget.key as GlobalKey, widget.overlay, widget.formatsAllowed);
 
     // Initialize the controller for controlling the QRView
-    if (widget.onQRViewCreated != null) {
-      widget.onQRViewCreated(controller);
-    }
+    widget.onQRViewCreated(controller);
   }
 }
 
 class _QrCameraSettings {
   _QrCameraSettings({
-    this.cameraFacing,
+    required this.cameraFacing,
   });
 
   final CameraFacing cameraFacing;
@@ -254,7 +251,7 @@ class _QrCameraSettings {
 
 class QRViewController {
   QRViewController._(MethodChannel channel, GlobalKey qrKey,
-      PermissionSetCallback onPermissionSet, CameraFacing cameraFacing)
+      PermissionSetCallback? onPermissionSet, CameraFacing cameraFacing)
       : _channel = channel,
         _cameraFacing = cameraFacing {
     _channel.setMethodCallHandler((call) async {
@@ -299,23 +296,21 @@ class QRViewController {
 
   Stream<Barcode> get scannedDataStream => _scanUpdateController.stream;
 
-  SystemFeatures _features;
-  bool _hasPermissions;
+  late bool _hasPermissions;
 
-  SystemFeatures get systemFeatures => _features;
   bool get hasPermissions => _hasPermissions;
 
   /// Starts the barcode scanner
   Future<void> _startScan(
     GlobalKey key,
-    QrScannerOverlayShape overlay,
-    List<BarcodeFormat> barcodeFormats,
+    QrScannerOverlayShape? overlay,
+    List<BarcodeFormat>? barcodeFormats,
   ) async {
     // We need to update the dimension before the scan is started.
     try {
       await QRViewController.updateDimensions(key, _channel, overlay: overlay);
       return await _channel.invokeMethod(
-          'startScan', barcodeFormats?.map((e) => e.asInt())?.toList() ?? []);
+          'startScan', barcodeFormats?.map((e) => e.asInt()).toList() ?? []);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -406,12 +401,15 @@ class QRViewController {
   }
 
   /// Updates the view dimensions for iOS.
-  static Future<void> updateDimensions(GlobalKey key, MethodChannel channel,
-      {QrScannerOverlayShape overlay}) async {
+  static Future<void> updateDimensions(
+    GlobalKey key,
+    MethodChannel channel, {
+    QrScannerOverlayShape? overlay,
+  }) async {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Add small delay to ensure the renderbox is loaded
       await Future.delayed(Duration(milliseconds: 100));
-      final RenderBox renderBox = key.currentContext.findRenderObject();
+      final renderBox = key.currentContext?.findRenderObject() as RenderBox;
       try {
         await channel.invokeMethod('setDimensions', {
           'width': renderBox.size.width,

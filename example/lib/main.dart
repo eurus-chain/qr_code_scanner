@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:app_qrcode_scanner/app_qrcode_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() => runApp(MaterialApp(home: QRViewExample()));
 
 class QRViewExample extends StatefulWidget {
   const QRViewExample({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -27,7 +27,7 @@ class _QRViewExampleState extends State<QRViewExample> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            FlatButton(
+            TextButton(
               onPressed: () async {
                 await scanQRCode(context);
               },
@@ -50,24 +50,42 @@ class _QRViewExampleState extends State<QRViewExample> {
     var response = await QRCodeScanner().tryOpenScanner(_);
 
     setState(() {
-      result = response ?? '';
+      result = response;
     });
   }
 }
 
 class QRCodeScanner extends AppQRCodeScanner {
   @override
-  Future<bool> ckCameraPermission() async {
+  Future<bool?> ckCameraPermission() async {
     var camStatus = await Permission.camera.status;
-    var camPerm = camStatus.isUndetermined ? null : camStatus.isGranted;
+    bool? camPerm;
+    if (camStatus.isDenied) {
+      camPerm = null;
+    } else {
+      if (camStatus.isPermanentlyDenied) {
+        camPerm = false;
+      } else {
+        camPerm = camStatus.isGranted;
+      }
+    }
 
     return camPerm;
   }
 
   @override
-  Future<bool> ckPhotoPermission() async {
+  Future<bool?> ckPhotoPermission() async {
     var photoStatus = await Permission.photos.status;
-    var photoPerm = photoStatus.isUndetermined ? null : photoStatus.isGranted;
+    bool? photoPerm;
+    if (photoStatus.isDenied) {
+      photoPerm = null;
+    } else {
+      if (photoStatus.isPermanentlyDenied) {
+        photoPerm = false;
+      } else {
+        photoPerm = photoStatus.isGranted;
+      }
+    }
 
     return photoPerm;
   }

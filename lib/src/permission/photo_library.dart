@@ -12,14 +12,12 @@ class PhotoLibraryPermModal extends PermModalTemplate {
               ? 'Please allow us to access your Photo Library in your System Setting'
               : 'Get Started by allowing us to access your Photo Library',
           color: themeColor,
-          icon: disabled == true
-              ? Icons.warning_rounded
-              : Icons.image_rounded,
+          icon: disabled == true ? Icons.warning_rounded : Icons.image_rounded,
           iconColor: disabled == true ? Color(0xffFB4245) : themeColor,
           hideDecline: disabled ?? false,
           acceptText: disabled == true ? 'Ok' : null,
         );
 
-  final bool disabled;
-  final Color themeColor;
+  final bool? disabled;
+  final Color? themeColor;
 }

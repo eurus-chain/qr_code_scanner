@@ -22,7 +22,7 @@ class CameraPermModal extends PermModalTemplate {
           otherAction: openPhotoAction,
         );
 
-  final bool disabled;
-  final Widget openPhotoAction;
-  final Color themeColor;
+  final bool? disabled;
+  final Widget? openPhotoAction;
+  final Color? themeColor;
 }

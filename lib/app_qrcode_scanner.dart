@@ -21,14 +21,14 @@ export 'src/types/camera_exception.dart';
 export 'src/types/features.dart';
 
 abstract class AppQRCodeScanner {
-  Color themeColor;
-  String camtPgTitle;
-  IconData imgPickerIcon;
-  IconData flashOnIcon;
-  String flashOnText;
-  IconData flashOffIcon;
-  String flashOffText;
-  String scanningText;
+  Color? themeColor;
+  String? camtPgTitle;
+  IconData? imgPickerIcon;
+  IconData? flashOnIcon;
+  String? flashOnText;
+  IconData? flashOffIcon;
+  String? flashOffText;
+  String? scanningText;
 
   Future<String> tryOpenScanner(BuildContext _) async {
     var hvCamPerm = await ckCameraPermission();
@@ -47,13 +47,14 @@ abstract class AppQRCodeScanner {
             ),
             themeColor: themeColor),
       );
-      return result is String ? result : '';
+      return result is String ? result as String : '';
     } else if (hvCamPerm == true) {
       // Already hv permission
       return _openScanner(
         _,
         hvPhotoPerm: hvPhotoPerm,
-        photoPermModal: genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
+        photoPermModal:
+            genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
         photoDisabledPermModal: genPhotoPermModal(true, themeColor: themeColor),
         pgTitle: camtPgTitle,
         imgPickerIcon: imgPickerIcon,
@@ -82,8 +83,10 @@ abstract class AppQRCodeScanner {
         return _openScanner(
           _,
           hvPhotoPerm: hvPhotoPerm,
-          photoPermModal: genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
-          photoDisabledPermModal: genPhotoPermModal(true, themeColor: themeColor),
+          photoPermModal:
+              genPhotoPermModal(hvPhotoPerm == false, themeColor: themeColor),
+          photoDisabledPermModal:
+              genPhotoPermModal(true, themeColor: themeColor),
           pgTitle: camtPgTitle,
           imgPickerIcon: imgPickerIcon,
           flashOnIcon: flashOnIcon,
@@ -103,13 +106,16 @@ abstract class AppQRCodeScanner {
     return '';
   }
 
-  Widget imgPickerBtn(
+  Widget? imgPickerBtn(
     BuildContext _,
-    bool hvPhotoPerm,
+    bool? hvPhotoPerm,
     CustomModal photoPermModal, {
-    Color themeColor,
+    Color? themeColor,
   }) {
-    return hvPhotoPerm != false ? _imgPickerbtn(_, hvPhotoPerm == false, photoPermModal, themeColor: themeColor) : null;
+    return hvPhotoPerm != false
+        ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal,
+            themeColor: themeColor)
+        : null;
   }
 
   /// Return permission status of resourses
@@ -117,13 +123,13 @@ abstract class AppQRCodeScanner {
   /// null:   Have to ask for permission
   /// true:   Already granted permission
   /// false:  Permission denied
-  Future<bool> ckCameraPermission();
-  Future<bool> ckPhotoPermission();
+  Future<bool?> ckCameraPermission();
+  Future<bool?> ckPhotoPermission();
 
   CustomModal genCameraPermModal(
-    bool disabled,
-    Widget openPhotoAction, {
-    Color themeColor,
+    bool? disabled,
+    Widget? openPhotoAction, {
+    Color? themeColor,
   }) {
     return CameraPermModal(
       disabled: disabled,
@@ -132,24 +138,24 @@ abstract class AppQRCodeScanner {
     );
   }
 
-  CustomModal genPhotoPermModal(bool disabled, {Color themeColor}) {
+  CustomModal genPhotoPermModal(bool? disabled, {Color? themeColor}) {
     return PhotoLibraryPermModal(disabled: disabled, themeColor: themeColor);
   }
 }
 
 Future<String> _openScanner(
   BuildContext _, {
-  bool hvPhotoPerm,
-  CustomModal photoPermModal,
-  CustomModal photoDisabledPermModal,
-  String pgTitle,
-  IconData imgPickerIcon,
-  IconData flashOnIcon,
-  String flashOnText,
-  IconData flashOffIcon,
-  String flashOffText,
-  String scanningText,
-  Color themeColor,
+  bool? hvPhotoPerm,
+  CustomModal? photoPermModal,
+  CustomModal? photoDisabledPermModal,
+  String? pgTitle,
+  IconData? imgPickerIcon,
+  IconData? flashOnIcon,
+  String? flashOnText,
+  IconData? flashOffIcon,
+  String? flashOffText,
+  String? scanningText,
+  Color? themeColor,
 }) async {
   var result = await Navigator.push(
     _,
@@ -175,16 +181,16 @@ Future<String> _openScanner(
 
 Widget _imgPickerbtn(
   BuildContext _,
-  bool hvPhotoPerm,
+  bool? hvPhotoPerm,
   CustomModal photoPermModal, {
-  Color themeColor,
+  Color? themeColor,
 }) {
   return Column(
     mainAxisAlignment: MainAxisAlignment.center,
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
       Text('-- Or --'),
-      FlatButton(
+      TextButton(
         onPressed: () async {
           var result = await tryOpenImgPicker(
             _,
@@ -202,13 +208,14 @@ Widget _imgPickerbtn(
 
 Future<String> tryOpenImgPicker(
   BuildContext _,
-  bool hvPhotoPerm,
-  CustomModal photoPermModal, {
-  Color themeColor,
+  bool? hvPhotoPerm,
+  CustomModal? photoPermModal, {
+  Color? themeColor,
 }) async {
   if (hvPhotoPerm == false) {
     /// Advice user to enable this function in setting if no permission
-    await Navigator.of(_).push(photoPermModal ?? PhotoLibraryPermModal(disabled: true, themeColor: themeColor));
+    await Navigator.of(_).push(photoPermModal ??
+        PhotoLibraryPermModal(disabled: true, themeColor: themeColor));
     return '';
   } else if (hvPhotoPerm == true) {
     return _openImgPicker();
@@ -216,7 +223,8 @@ Future<String> tryOpenImgPicker(
     /// Open image picker if permission is already granted
   } else {
     /// Ask user to grant permission
-    var allow = await Navigator.of(_).push(photoPermModal ?? PhotoLibraryPermModal(themeColor: themeColor));
+    var allow = await Navigator.of(_)
+        .push(photoPermModal ?? PhotoLibraryPermModal(themeColor: themeColor));
     if (allow == true) {
       return _openImgPicker();
     }
@@ -228,10 +236,11 @@ Future<String> tryOpenImgPicker(
 Future<String> _openImgPicker() async {
   try {
     final _picker = ImagePicker();
-    final pickedFile = await _picker.getImage(source: ImageSource.gallery, maxWidth: 500);
+    final pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery, maxWidth: 500);
 
     if (pickedFile != null) {
-      return QrCodeToolsPlugin.decodeFrom(pickedFile.path);
+      return await QrCodeToolsPlugin.decodeFrom(pickedFile.path) ?? '';
     }
   } catch (e) {
     return '';

@@ -4,9 +4,9 @@ import 'cus_modal.dart';
 
 class PermModalTemplate extends CustomModal {
   PermModalTemplate({
-    @required this.icon,
-    @required this.title,
-    @required this.desc,
+    required this.icon,
+    required this.title,
+    required this.desc,
     this.color,
     this.iconColor,
     this.acceptText,
@@ -16,21 +16,21 @@ class PermModalTemplate extends CustomModal {
   });
 
   // Main Color of this modal
-  final Color color;
+  final Color? color;
 
   // Informations that to be shown on this page
   final IconData icon;
   final String title;
   final String desc;
-  final Color iconColor;
-  final String acceptText;
-  final String declineText;
+  final Color? iconColor;
+  final String? acceptText;
+  final String? declineText;
 
   // Hide decline for one action btn only
-  final bool hideDecline;
+  final bool? hideDecline;
 
   // Custom actions
-  final Widget otherAction;
+  final Widget? otherAction;
 
   @override
   Widget buildPage(
@@ -84,9 +84,10 @@ class PermModalTemplate extends CustomModal {
                         color: color ?? Color.fromRGBO(0, 159, 221, 1),
                         borderRadius: BorderRadius.all(Radius.circular(15)),
                       ),
-                      child: FlatButton(
-                        minWidth: double.infinity,
-                        onPressed: () => Navigator.pop(context, true),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context, true);
+                        },
                         child: Padding(
                           padding: EdgeInsets.all(12),
                           child: Text(acceptText ?? 'OK',
@@ -100,8 +101,10 @@ class PermModalTemplate extends CustomModal {
                         padding: EdgeInsets.all(12),
                       )
                     else
-                      FlatButton(
-                        onPressed: () => Navigator.pop(context),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          },
                         child: Padding(
                           padding: EdgeInsets.zero,
                           child: Text(
@@ -123,7 +126,9 @@ class PermModalTemplate extends CustomModal {
     );
   }
 
-  Widget _cusSpacer({double p}) {
+  Widget _cusSpacer({
+    double? p,
+  }) {
     return Padding(padding: EdgeInsets.only(top: p ?? 5));
   }
 }

@@ -23,18 +23,18 @@ class QRCodeModal extends CustomModal {
     this.themeColor,
   }) : super();
 
-  final bool hvPhotoPerm;
-  final CustomModal photoPermModal;
-  final CustomModal photoDisabledPermModal;
+  final bool? hvPhotoPerm;
+  final CustomModal? photoPermModal;
+  final CustomModal? photoDisabledPermModal;
 
-  final String pgTitle;
-  final IconData imgPickerIcon;
-  final IconData flashOnIcon;
-  final String flashOnText;
-  final IconData flashOffIcon;
-  final String flashOffText;
-  final String scanningText;
-  final Color themeColor;
+  final String? pgTitle;
+  final IconData? imgPickerIcon;
+  final IconData? flashOnIcon;
+  final String? flashOnText;
+  final IconData? flashOffIcon;
+  final String? flashOffText;
+  final String? scanningText;
+  final Color? themeColor;
 
   @override
   Widget buildPage(
@@ -78,18 +78,18 @@ class _QrCodeModalPage extends StatefulWidget {
     this.themeColor,
   }) : super();
 
-  final bool hvPhotoPerm;
-  final CustomModal photoPermModal;
-  final CustomModal photoDisabledPermModal;
+  final bool? hvPhotoPerm;
+  final CustomModal? photoPermModal;
+  final CustomModal? photoDisabledPermModal;
 
-  final String pgTitle;
-  final IconData imgPickerIcon;
-  final IconData flashOnIcon;
-  final String flashOnText;
-  final IconData flashOffIcon;
-  final String flashOffText;
-  final String scanningText;
-  final Color themeColor;
+  final String? pgTitle;
+  final IconData? imgPickerIcon;
+  final IconData? flashOnIcon;
+  final String? flashOnText;
+  final IconData? flashOffIcon;
+  final String? flashOffText;
+  final String? scanningText;
+  final Color? themeColor;
 
   @override
   _QrCodeModalPageState createState() => _QrCodeModalPageState();
@@ -98,10 +98,10 @@ class _QrCodeModalPage extends StatefulWidget {
 class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
-  QRViewController _controller;
+  QRViewController? _controller;
   bool _flashOn = false;
 
-  bool _photoPerm;
+  bool? _photoPerm;
 
   @override
   void initState() {
@@ -121,9 +121,9 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
         QRView(
           key: qrKey,
           onQRViewCreated: _onQRViewCreated,
-          pgTitle: widget.pgTitle,
+          pgTitle: widget.pgTitle ?? '',
           overlay: QrScannerOverlayShape(
-            borderColor: widget.themeColor,
+            borderColor: widget.themeColor ?? Colors.red,
             borderRadius: 0,
             borderLength: borderLength,
             borderWidth: 8,
@@ -146,14 +146,15 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                         Navigator.pop(context, 'empty');
                       },
                     ),
-                    title: Text(widget.pgTitle),
+                    title: Text(widget.pgTitle ?? ''),
                     actions: [
                       IconButton(
                         icon: Icon(widget.imgPickerIcon),
                         color: Colors.white,
                         onPressed: () async {
                           await _controller?.pauseCamera();
-                          await _tryOpenImagePicker(context).whenComplete(() => _controller?.resumeCamera());
+                          await _tryOpenImagePicker(context)
+                              .whenComplete(() => _controller?.resumeCamera());
                         },
                       )
                     ],
@@ -167,16 +168,16 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 15),
                       child: Text(
-                        widget.scanningText,
+                        widget.scanningText ?? '',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    FlatButton(
+                    TextButton(
                       onPressed: () {
                         _controller?.toggleFlash();
                         setState(() {
@@ -188,20 +189,25 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(_flashOn ? widget.flashOnIcon : widget.flashOffIcon,
-                                color: Colors.white, size: scanArea / 8),
+                            Icon(
+                                _flashOn
+                                    ? widget.flashOnIcon
+                                    : widget.flashOffIcon,
+                                color: Colors.white,
+                                size: scanArea / 8),
                             Padding(
                               padding: EdgeInsets.only(bottom: 10),
                             ),
                             Text(
-                              _flashOn ? widget.flashOnText : widget.flashOffText,
+                              _flashOn
+                                  ? widget.flashOnText ?? ''
+                                  : widget.flashOffText ?? '',
                               style: TextStyle(color: Colors.white),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    Padding(padding: EdgeInsets.only(bottom: 50)),
                   ],
                 ),
               ),
@@ -216,23 +222,23 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   void reassemble() {
     super.reassemble();
     if (Platform.isAndroid) {
-      _controller.pauseCamera();
+      _controller?.pauseCamera();
     } else if (Platform.isIOS) {
-      _controller.resumeCamera();
+      _controller?.resumeCamera();
     }
   }
 
   void _onQRViewCreated(QRViewController controller) {
     _controller = controller;
-    _controller.scannedDataStream.listen((c) async {
-      await _controller.pauseCamera();
+    _controller?.scannedDataStream.listen((c) async {
+      await _controller?.pauseCamera();
       await _onScannedData(c.code);
     });
   }
 
   Future<void> _onScannedData(String val) async {
     if (_controller != null) {
-      await _controller.pauseCamera();
+      await _controller!.pauseCamera();
     }
     Future.delayed(
       Duration(milliseconds: 500),
@@ -247,16 +253,17 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
       await Navigator.push(
         _,
         widget.photoDisabledPermModal ??
-        PhotoLibraryPermModal(
-          disabled: true,
-          themeColor: widget.themeColor,
-        ),
+            PhotoLibraryPermModal(
+              disabled: true,
+              themeColor: widget.themeColor,
+            ),
       );
       return;
     } else {
       var photoPrem = await Navigator.push(
         _,
-        widget.photoPermModal ?? PhotoLibraryPermModal(themeColor: widget.themeColor),
+        widget.photoPermModal ??
+            PhotoLibraryPermModal(themeColor: widget.themeColor),
       );
       if (photoPrem != true) {
         return;
@@ -266,22 +273,24 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   }
 
   Future _openImagePicker(BuildContext _) async {
-    await ImagePicker().getImage(source: ImageSource.gallery, maxWidth: 500).then(
+    await ImagePicker()
+        .pickImage(source: ImageSource.gallery, maxWidth: 500)
+        .then(
       (pickedFile) async {
         if (pickedFile != null) await _decode(pickedFile.path);
       },
-    ).catchError((e) => print('disallowed $e'));
+    );
   }
 
   Future _decode(String file) async {
     var data = await QrCodeToolsPlugin.decodeFrom(file);
-    await _onScannedData(data);
+    await _onScannedData(data ?? '');
   }
 
   @override
   void dispose() {
     if (_controller != null) {
-      _controller.dispose();
+      _controller!.dispose();
       _controller = null;
     }
     super.dispose();
