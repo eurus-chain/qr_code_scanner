@@ -1,6 +1,6 @@
 name: app_qrcode_scanner
 description: QRCode Scanner with camera scanner and photo scanner function. Available in both Android and iOS Device. Forked from qr_code_scanner
-version: 0.0.2
+version: 1.0.0
 homepage: https://www.goldhub.hk
 
 environment:
