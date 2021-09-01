@@ -262,10 +262,12 @@ class QRViewController {
             final code = args['code'] as String;
             final rawType = args['type'] as String;
             // Raw bytes are only supported by Android.
-            final rawBytes = args['rawBytes'] as List<int>;
+            final rawBytes = args['rawBytes'] is List<int>
+                ? args['rawBytes'] as List<int>
+                : null;
             final format = BarcodeTypesExtension.fromString(rawType);
             if (format != null) {
-              final barcode = Barcode(code, format, rawBytes);
+              final barcode = Barcode(code, format, rawBytes ?? []);
               _scanUpdateController.sink.add(barcode);
             } else {
               throw Exception('Unexpected barcode type $rawType');
