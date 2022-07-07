@@ -1,3 +1,36 @@
+## 1.0.0
+Breaking changes:
+Minimum Flutter version is now Flutter 3.0.0 (Dart 2.17.0).
+
+#### Features
+* Inverted is now mixed with normal scanning.
+* onPermissionSet now works on web aswell.
+* [Android] zxing core is updated to 3.5.0.
+* [Android] Several code improvements.
+* [Android] Several dependencies updated.
+
+## 0.7.0
+#### Features
+* Add inverted feature for Android. See https://github.com/juliuscanute/qr_code_scanner/issues/403
+
+#### Bugfixes
+* Fixed permission error on devices running Android 7 or lower.
+* Fixed error being thrown when user declines permission on iOS.
+* Updated dependencies
+
+## 0.6.1
+* Fix bug which caused build to fail for iOS. (#452)
+
+## 0.6.0
+#### Features
+* Add support for raw bytes on iOS. (#421)
+* Add custom cutout width and height next to cutout size. (#432)
+
+#### Bugfixes
+* Fix for calling permission multiple times. (#381)
+* Fix for QRView Overlay cutoutbottomoffset. (#383)
+* Multiple minor improvements
+
 ## 0.5.2
 #### Bugfixes
 * Increased delay to fix QRView opening zoomed in on some devices by adding small delay to updateDimensions(). (#250)

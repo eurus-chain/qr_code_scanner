@@ -65,7 +65,7 @@ class _QRViewState extends State<QRView> {
   void initState() {
     super.initState();
     _observer = LifecycleEventHandler(resumeCallBack: updateDimensions);
-    WidgetsBinding.instance!.addObserver(_observer);
+    WidgetsBinding.instance.addObserver(_observer);
   }
 
   @override
@@ -83,7 +83,7 @@ class _QRViewState extends State<QRView> {
   @override
   void dispose() {
     super.dispose();
-    WidgetsBinding.instance!.removeObserver(_observer);
+    WidgetsBinding.instance.removeObserver(_observer);
   }
 
   Future<void> updateDimensions() async {
@@ -101,10 +101,12 @@ class _QRViewState extends State<QRView> {
     return Stack(
       children: [
         _getPlatformQrView(),
-        Container(
+        Padding(
           padding: widget.overlayMargin,
-          decoration: ShapeDecoration(
-            shape: widget.overlay!,
+          child: Container(
+            decoration: ShapeDecoration(
+              shape: widget.overlay!,
+            ),
           ),
         )
       ],
@@ -116,6 +118,7 @@ class _QRViewState extends State<QRView> {
     if (kIsWeb) {
       _platformQrView = createWebQrView(
         onPlatformViewCreated: widget.onQRViewCreated,
+        onPermissionSet: widget.onPermissionSet,
         cameraFacing: widget.cameraFacing,
       );
     } else {
@@ -126,7 +129,7 @@ class _QRViewState extends State<QRView> {
             onPlatformViewCreated: _onPlatformViewCreated,
             creationParams:
                 _QrCameraSettings(cameraFacing: widget.cameraFacing).toMap(),
-            creationParamsCodec: StandardMessageCodec(),
+            creationParamsCodec: const StandardMessageCodec(),
           );
           break;
         case TargetPlatform.iOS:
@@ -135,7 +138,7 @@ class _QRViewState extends State<QRView> {
             onPlatformViewCreated: _onPlatformViewCreated,
             creationParams:
                 _QrCameraSettings(cameraFacing: widget.cameraFacing).toMap(),
-            creationParamsCodec: StandardMessageCodec(),
+            creationParamsCodec: const StandardMessageCodec(),
           );
           break;
         default:
@@ -187,7 +190,7 @@ class QRViewController {
         case 'onRecognizeQR':
           if (call.arguments != null) {
             final args = call.arguments as Map;
-            final code = args['code'] as String;
+            final code = args['code'] as String?;
             final rawType = args['type'] as String;
             // Raw bytes are only supported by Android.
             final rawBytes = args['rawBytes'] as List<int>?;
@@ -327,21 +330,44 @@ class QRViewController {
       {QrScannerOverlayShape? overlay}) async {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Add small delay to ensure the render box is loaded
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 300));
       if (key.currentContext == null) return false;
       final renderBox = key.currentContext!.findRenderObject() as RenderBox;
       try {
         await channel.invokeMethod('setDimensions', {
           'width': renderBox.size.width,
           'height': renderBox.size.height,
-          'scanArea': overlay?.cutOutSize ?? 0,
+          'scanAreaWidth': overlay?.cutOutWidth ?? 0,
+          'scanAreaHeight': overlay?.cutOutHeight ?? 0,
           'scanAreaOffset': overlay?.cutOutBottomOffset ?? 0
         });
         return true;
       } on PlatformException catch (e) {
         throw CameraException(e.code, e.message);
       }
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      if (overlay == null) {
+        return false;
+      }
+      await channel.invokeMethod('changeScanArea', {
+        'scanAreaWidth': overlay.cutOutWidth,
+        'scanAreaHeight': overlay.cutOutHeight,
+        'cutOutBottomOffset': overlay.cutOutBottomOffset
+      });
+      return true;
     }
     return false;
+  }
+
+  //Starts/Stops invert scanning.
+  Future<void> scanInvert(bool isScanInvert) async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        await _channel
+            .invokeMethod('invertScan', {"isInvertScan": isScanInvert});
+      } on PlatformException catch (e) {
+        throw CameraException(e.code, e.message);
+      }
+    }
   }
 }
