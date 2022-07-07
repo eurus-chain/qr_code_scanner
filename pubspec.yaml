@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  image_picker: ^0.8.2
+  image_picker: ^0.8.5+3
   qr_code_tools:
     git:
       url: https://github.com/PabloPessotto/qr_code_tools.git

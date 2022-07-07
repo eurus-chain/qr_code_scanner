@@ -80,7 +80,7 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
                       overlay: widget.overlay)
                 }
             });
-    WidgetsBinding.instance?.addObserver(_observer);
+    WidgetsBinding.instance.addObserver(_observer);
   }
 
   @override
@@ -99,7 +99,7 @@ class _QRViewState extends State<QRView> with SingleTickerProviderStateMixin {
   void dispose() {
     _aniCon.dispose();
     super.dispose();
-    WidgetsBinding.instance?.removeObserver(_observer);
+    WidgetsBinding.instance.removeObserver(_observer);
   }
 
   bool onNotification(notification) {
