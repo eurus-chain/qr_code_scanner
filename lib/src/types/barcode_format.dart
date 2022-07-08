@@ -53,7 +53,10 @@ enum BarcodeFormat {
   upcE,
 
   /// UPC/EAN extension format. Not a stand-alone format.
-  upcEanExtension
+  upcEanExtension,
+
+  /// Unknown
+  unknown
 }
 
 extension BarcodeTypesExtension on BarcodeFormat {
@@ -98,7 +101,7 @@ extension BarcodeTypesExtension on BarcodeFormat {
       case 'UPC_EAN_EXTENSION':
         return BarcodeFormat.upcEanExtension;
       default:
-        return null;
+        return BarcodeFormat.unknown;
     }
   }
 
@@ -139,7 +142,7 @@ extension BarcodeTypesExtension on BarcodeFormat {
       case BarcodeFormat.upcEanExtension:
         return 'UPC_EAN_EXTENSION';
       default:
-        return 'NOT_VALID';
+        return 'UNKNOWN';
     }
   }
 }

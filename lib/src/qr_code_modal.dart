@@ -119,7 +119,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
         QRView(
           key: qrKey,
           onQRViewCreated: _onQRViewCreated,
-          pgTitle: widget.pgTitle ?? '',
+          // pgTitle: widget.pgTitle ?? '',
           overlay: QrScannerOverlayShape(
             borderColor: widget.themeColor ?? Colors.red,
             borderRadius: 0,
@@ -230,7 +230,7 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
     _controller = controller;
     _controller?.scannedDataStream.listen((c) async {
       await _controller?.pauseCamera();
-      await _onScannedData(c.code);
+      await _onScannedData(c.code!);
     });
   }
 
