@@ -1,11 +1,5 @@
 #import "FlutterQrPlugin.h"
-
-#if __has_include(<qr_code_scanner/qr_code_scanner-Swift.h>)
-#import <qr_code_scanner/qr_code_scanner-Swift.h>
-#else
-#import "qr_code_scanner-Swift.h"
-#endif
-
+#import "app_qrcode_scanner/app_qrcode_scanner-Swift.h"
 @implementation FlutterQrPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     [SwiftFlutterQrPlugin registerWithRegistrar:registrar];
