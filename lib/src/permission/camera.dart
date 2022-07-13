@@ -16,7 +16,7 @@ class CameraPermModal extends PermModalTemplate {
           icon: disabled == true
               ? Icons.warning_rounded
               : Icons.camera_alt_rounded,
-          iconColor: disabled == true ? Color(0xffFB4245) : themeColor,
+          iconColor: disabled == true ? const Color(0xffFB4245) : themeColor,
           hideDecline: disabled ?? false,
           acceptText: disabled == true ? 'Ok' : null,
           otherAction: openPhotoAction,

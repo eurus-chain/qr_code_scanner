@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:qr_code_tools/qr_code_tools.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../app_qrcode_scanner.dart';
 
@@ -55,14 +56,14 @@ class QRCodeModal extends CustomModal {
         flashOffIcon: flashOffIcon ?? Icons.flash_off,
         flashOffText: flashOffText ?? 'Lights Off',
         scanningText: scanningText ?? 'Scanning',
-        themeColor: themeColor ?? Color(0xff009FDD),
+        themeColor: themeColor ?? const Color(0xff009FDD),
       ),
     );
   }
 }
 
 class _QrCodeModalPage extends StatefulWidget {
-  _QrCodeModalPage({
+  const _QrCodeModalPage({
     this.hvPhotoPerm,
     this.photoPermModal,
     this.photoDisabledPermModal,
@@ -94,15 +95,12 @@ class _QrCodeModalPage extends StatefulWidget {
 }
 
 class _QrCodeModalPageState extends State<_QrCodeModalPage> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-
-  QRViewController? _controller;
-  bool _flashOn = false;
-
+  late MobileScannerController _controller;
   bool? _photoPerm;
 
   @override
   void initState() {
+    _controller = MobileScannerController();
     _photoPerm = widget.hvPhotoPerm == true ? true : null;
     super.initState();
   }
@@ -116,17 +114,26 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
 
     return Stack(
       children: [
-        QRView(
-          key: qrKey,
-          onQRViewCreated: _onQRViewCreated,
-          // pgTitle: widget.pgTitle ?? '',
-          overlay: QrScannerOverlayShape(
-            borderColor: widget.themeColor ?? Colors.red,
-            borderRadius: 0,
-            borderLength: borderLength,
-            borderWidth: 8,
-            cutOutSize: scanArea,
-            overlayColor: Color.fromRGBO(0, 0, 0, 0.8),
+        MobileScanner(
+          onDetect: (barcode, args) {
+            if (barcode.rawValue != null) {
+              if (barcode.format == BarcodeFormat.qrCode) {
+                _onScannedData(barcode.rawValue ?? '');
+              }
+            }
+          },
+          controller: _controller,
+        ),
+        Container(
+          decoration: ShapeDecoration(
+            shape: QrScannerOverlayShape(
+              borderColor: widget.themeColor ?? Colors.red,
+              borderRadius: 0,
+              borderLength: borderLength,
+              borderWidth: 8,
+              cutOutSize: scanArea,
+              overlayColor: const Color.fromRGBO(0, 0, 0, 0.8),
+            ),
           ),
         ),
         SafeArea(
@@ -135,10 +142,10 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
               Expanded(
                 child: Container(
                   child: AppBar(
-                    backgroundColor: Color.fromRGBO(0, 0, 0, 0),
-                    shadowColor: Color.fromRGBO(0, 0, 0, 0),
+                    backgroundColor: const Color.fromRGBO(0, 0, 0, 0),
+                    shadowColor: const Color.fromRGBO(0, 0, 0, 0),
                     leading: IconButton(
-                      icon: Icon(Icons.arrow_back_ios),
+                      icon: const Icon(Icons.arrow_back_ios),
                       color: Colors.white,
                       onPressed: () {
                         Navigator.pop(context, 'empty');
@@ -150,16 +157,16 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                         icon: Icon(widget.imgPickerIcon),
                         color: Colors.white,
                         onPressed: () async {
-                          await _controller?.pauseCamera();
+                          await _controller.stop();
                           await _tryOpenImagePicker(context)
-                              .whenComplete(() => _controller?.resumeCamera());
+                              .whenComplete(() => _controller.start());
                         },
                       )
                     ],
                   ),
                 ),
               ),
-              Container(
+              SizedBox(
                 height: scanArea,
                 width: scanArea,
               ),
@@ -169,40 +176,48 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       child: Text(
                         widget.scanningText ?? '',
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
-                        _controller?.toggleFlash();
-                        setState(() {
-                          _flashOn = !_flashOn;
-                        });
-                      },
+                      onPressed: () => _controller.toggleTorch(),
                       child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                                _flashOn
-                                    ? widget.flashOnIcon
-                                    : widget.flashOffIcon,
-                                color: Colors.white,
-                                size: scanArea / 8),
-                            Padding(
-                              padding: EdgeInsets.only(bottom: 10),
-                            ),
-                            Text(
-                              _flashOn
-                                  ? widget.flashOnText ?? ''
-                                  : widget.flashOffText ?? '',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
+                        padding: const EdgeInsets.all(10),
+                        child: ValueListenableBuilder(
+                          valueListenable: _controller.torchState,
+                          builder: (context, state, child) {
+                            IconData icon;
+                            String desc;
+                            switch (state as TorchState) {
+                              case TorchState.off:
+                                icon = widget.flashOffIcon ?? Icons.flash_off;
+                                desc = widget.flashOnText ?? '';
+                                break;
+                              case TorchState.on:
+                                icon = widget.flashOnIcon ?? Icons.flash_on;
+                                desc = widget.flashOffText ?? '';
+                            }
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  icon,
+                                  color: Colors.white,
+                                  size: scanArea / 8,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                ),
+                                Text(
+                                  desc,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -220,26 +235,16 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   void reassemble() {
     super.reassemble();
     if (Platform.isAndroid) {
-      _controller?.pauseCamera();
+      _controller.stop();
     } else if (Platform.isIOS) {
-      _controller?.resumeCamera();
+      _controller.start();
     }
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    _controller = controller;
-    _controller?.scannedDataStream.listen((c) async {
-      await _controller?.pauseCamera();
-      await _onScannedData(c.code!);
-    });
   }
 
   Future<void> _onScannedData(String val) async {
-    if (_controller != null) {
-      await _controller!.pauseCamera();
-    }
+    await _controller.stop();
     Future.delayed(
-      Duration(milliseconds: 500),
+      const Duration(milliseconds: 500),
       () => Navigator.pop(context, val),
     );
   }
@@ -281,16 +286,19 @@ class _QrCodeModalPageState extends State<_QrCodeModalPage> {
   }
 
   Future _decode(String file) async {
-    var data = await QrCodeToolsPlugin.decodeFrom(file);
-    await _onScannedData(data ?? '');
+    MobileScannerController cameraController = MobileScannerController();
+    late StreamSubscription sub;
+    sub = cameraController.barcodesController.stream.listen((barcode) {
+      _onScannedData(barcode.rawValue ?? '');
+      sub.cancel();
+    });
+
+    await cameraController.analyzeImage(file);
   }
 
   @override
   void dispose() {
-    if (_controller != null) {
-      _controller!.dispose();
-      _controller = null;
-    }
+    _controller.dispose();
     super.dispose();
   }
 }

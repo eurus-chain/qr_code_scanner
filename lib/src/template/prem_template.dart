@@ -50,8 +50,8 @@ class PermModalTemplate extends CustomModal {
           Expanded(
             flex: 1,
             child: Container(
-              padding: EdgeInsets.all(35),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(35),
+              decoration: const BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(15),
                   topRight: Radius.circular(15),
@@ -66,14 +66,14 @@ class PermModalTemplate extends CustomModal {
                   children: [
                     Icon(
                       icon,
-                      color: iconColor ?? Color.fromRGBO(0, 159, 221, 1),
+                      color: iconColor ?? const Color.fromRGBO(0, 159, 221, 1),
                       size: MediaQuery.of(context).size.width / 3,
                     ),
                     _cusSpacer(),
                     Text(
                       title,
                       style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
+                          const TextStyle(fontWeight: FontWeight.bold, fontSize: 21),
                       textAlign: TextAlign.center,
                     ),
                     _cusSpacer(p: 15),
@@ -81,23 +81,23 @@ class PermModalTemplate extends CustomModal {
                     _cusSpacer(p: 35),
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: color ?? Color.fromRGBO(0, 159, 221, 1),
-                        borderRadius: BorderRadius.all(Radius.circular(15)),
+                        color: color ?? const Color.fromRGBO(0, 159, 221, 1),
+                        borderRadius: const BorderRadius.all(Radius.circular(15)),
                       ),
                       child: TextButton(
                         onPressed: () {
                           Navigator.pop(context, true);
                         },
                         child: Padding(
-                          padding: EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(12),
                           child: Text(acceptText ?? 'OK',
-                              style: TextStyle(color: Colors.white)),
+                              style: const TextStyle(color: Colors.white)),
                         ),
                       ),
                     ),
                     _cusSpacer(p: 35),
                     if (hideDecline != false)
-                      Padding(
+                      const Padding(
                         padding: EdgeInsets.all(12),
                       )
                     else
@@ -110,12 +110,12 @@ class PermModalTemplate extends CustomModal {
                           child: Text(
                             declineText ?? 'Don\'t Allow',
                             style: TextStyle(
-                              color: color ?? Color.fromRGBO(0, 159, 221, 1),
+                              color: color ?? const Color.fromRGBO(0, 159, 221, 1),
                             ),
                           ),
                         ),
                       ),
-                    otherAction ?? Padding(padding: EdgeInsets.zero),
+                    otherAction ?? const Padding(padding: EdgeInsets.zero),
                   ],
                 ),
               ),

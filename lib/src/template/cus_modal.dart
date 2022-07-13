@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomModal extends ModalRoute {
   @override
-  Duration get transitionDuration => Duration(milliseconds: 200);
+  Duration get transitionDuration => const Duration(milliseconds: 200);
 
   @override
   bool get opaque => false;
@@ -42,7 +42,7 @@ class CustomModal extends ModalRoute {
   ) {
     return SlideTransition(
       position: Tween<Offset>(
-        begin: Offset(0, 1),
+        begin: const Offset(0, 1),
         end: Offset.zero,
       ).animate(animation),
       child: child,

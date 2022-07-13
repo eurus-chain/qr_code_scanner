@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:qr_code_tools/qr_code_tools.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'src/permission/camera.dart';
 import 'src/permission/photo_library.dart';
@@ -10,12 +12,11 @@ import 'src/template/cus_modal.dart';
 export 'src/permission/camera.dart';
 export 'src/permission/photo_library.dart';
 export 'src/qr_code_modal.dart';
-export 'src/qr_code_scanner.dart';
+
 export 'src/qr_scanner_overlay_shape.dart';
 export 'src/template/cus_modal.dart';
 export 'src/template/prem_template.dart';
-export 'src/types/barcode.dart';
-export 'src/types/barcode_format.dart';
+
 export 'src/types/camera.dart';
 export 'src/types/camera_exception.dart';
 export 'src/types/features.dart';
@@ -113,8 +114,12 @@ abstract class AppQRCodeScanner {
     Color? themeColor,
   }) {
     return hvPhotoPerm != false
-        ? _imgPickerbtn(_, hvPhotoPerm, photoPermModal,
-            themeColor: themeColor)
+        ? _imgPickerbtn(
+            _,
+            hvPhotoPerm,
+            photoPermModal,
+            themeColor: themeColor,
+          )
         : null;
   }
 
@@ -189,36 +194,37 @@ Widget _imgPickerbtn(
     mainAxisAlignment: MainAxisAlignment.center,
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      Text('-- Or --'),
+      const Text('-- Or --'),
       TextButton(
-        onPressed: () async {
-          var result = await tryOpenImgPicker(
+        onPressed: () {
+          tryOpenImgPicker(
             _,
             hvPhotoPerm,
             photoPermModal,
             themeColor: themeColor,
+            barcodeHandler: (result) => Navigator.of(_).pop(result),
           );
-          Navigator.of(_).pop(result);
         },
-        child: Text('Scan QRCode from Image'),
+        child: const Text('Scan QRCode from Image'),
       )
     ],
   );
 }
 
-Future<String> tryOpenImgPicker(
+void tryOpenImgPicker(
   BuildContext _,
   bool? hvPhotoPerm,
   CustomModal? photoPermModal, {
   Color? themeColor,
+  required Function(String?) barcodeHandler,
 }) async {
   if (hvPhotoPerm == false) {
     /// Advice user to enable this function in setting if no permission
     await Navigator.of(_).push(photoPermModal ??
         PhotoLibraryPermModal(disabled: true, themeColor: themeColor));
-    return '';
+    barcodeHandler('');
   } else if (hvPhotoPerm == true) {
-    return _openImgPicker();
+    _openImgPicker(barcodeHandler: barcodeHandler);
 
     /// Open image picker if permission is already granted
   } else {
@@ -226,24 +232,31 @@ Future<String> tryOpenImgPicker(
     var allow = await Navigator.of(_)
         .push(photoPermModal ?? PhotoLibraryPermModal(themeColor: themeColor));
     if (allow == true) {
-      return _openImgPicker();
+      _openImgPicker(barcodeHandler: barcodeHandler);
     }
   }
 
-  return '';
+  barcodeHandler('');
 }
 
-Future<String> _openImgPicker() async {
+void _openImgPicker({required Function(String?) barcodeHandler}) async {
   try {
-    final _picker = ImagePicker();
+    final picker = ImagePicker();
     final pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery, maxWidth: 500);
+        await picker.pickImage(source: ImageSource.gallery, maxWidth: 500);
 
     if (pickedFile != null) {
-      return await QrCodeToolsPlugin.decodeFrom(pickedFile.path) ?? '';
+      MobileScannerController cameraController = MobileScannerController();
+      late StreamSubscription sub;
+      sub = cameraController.barcodesController.stream.listen((barcode) {
+        barcodeHandler(barcode.rawValue);
+        sub.cancel();
+      });
+
+      await cameraController.analyzeImage(pickedFile.path);
     }
   } catch (e) {
-    return '';
+    barcodeHandler('');
   }
-  return '';
+  barcodeHandler('');
 }
